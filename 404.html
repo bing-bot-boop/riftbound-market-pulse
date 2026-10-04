@@ -42,7 +42,7 @@ table{width:100%;border-collapse:collapse;min-width:980px}
 th,td{padding:10px 11px;text-align:left;border-bottom:1px solid rgba(37,50,76,.72);font-size:11px;vertical-align:middle}
 th{position:sticky;top:0;background:#111b30;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.055em;z-index:3}
 tbody tr{cursor:pointer}tbody tr:hover{background:#162139}
-.cardcell{display:flex;align-items:center;gap:9px;min-width:210px}.thumb{width:38px;height:53px;object-fit:cover;border-radius:5px;background:#080f1d;border:1px solid var(--line);flex:none}
+.cardcell{display:flex;align-items:center;gap:9px;min-width:210px}.thumb{width:56px;height:78px;object-fit:contain;border-radius:5px;background:#080f1d;border:1px solid var(--line);flex:none}
 .cardname{font-weight:850;font-size:12px}.cardname a{text-decoration:none;border-bottom:1px dashed #65779d}.cardname a:hover{color:#aebeff}.sub{display:block;color:var(--muted);font-size:9px;margin-top:3px}
 .badge{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:4px 7px;font-size:9px;font-weight:800;white-space:nowrap}.hot{color:var(--good);background:rgba(100,217,163,.09)}.mid{color:var(--warn);background:rgba(243,194,107,.08)}.dim{color:var(--muted)}
 .score{font-weight:900;font-size:12px}.scorebar{height:5px;width:72px;background:#202a41;border-radius:999px;overflow:hidden;margin-top:4px}.scorebar i{display:block;height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan))}
@@ -93,6 +93,7 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
     </div>
   </header>
 
+  <div id="freshness" class="callout" role="status" aria-live="polite" style="margin-bottom:12px">Checking source freshness…</div>
   <div class="source-row">
     <a class="source live" target="_blank" href="https://rifthunt.com/api/">RiftHunt API — catalogue + daily TCGplayer prices</a>
     <a class="source" target="_blank" href="https://riftbound.zone/en/meta-stats/">Riftbound Zone — official RQ top-deck meta</a>
@@ -113,8 +114,8 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
       <div class="stats">
         <div class="stat"><span>Card printings</span><strong id="statCards">—</strong><small>Live catalogue</small></div>
         <div class="stat"><span>Priced printings</span><strong id="statPrices">—</strong><small>Daily TCGplayer feed</small></div>
-        <div class="stat"><span>Official top decks</span><strong>391</strong><small>11 Regional Qualifiers</small></div>
-        <div class="stat"><span>KLX 2026 lists</span><strong>460</strong><small>18 tournaments</small></div>
+        <div class="stat"><span>Official top decks</span><strong id="officialDeckCount">—</strong><small id="officialEventCount">Source coverage</small></div>
+        <div class="stat"><span>KLX tracked cards</span><strong id="trackedCardCount">—</strong><small id="trackedCardStatus">Published card histories</small></div>
         <div class="stat"><span>Last refresh</span><strong id="statRefresh" style="font-size:15px">—</strong><small id="dataStatus">Loading…</small></div>
       </div>
 
@@ -129,10 +130,11 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
           <div id="overviewRanks" class="body"></div>
         </section>
         <section class="panel">
-          <div class="panel-head"><div><h2>Recent Event Winners</h2><small>Official top-deck event snapshot</small></div></div>
+          <div class="panel-head"><div><h2>Recent Event Winners</h2><small>Published winners · automatically checked hourly</small></div></div>
           <div id="winnerList" class="body"></div>
         </section>
       </div>
+      <section class="panel" style="margin-top:14px"><div class="panel-head"><div><h2>Latest Published Tournament Lists</h2><small>Newest results shown by KLXCards · click a placement for its exact decklist</small></div></div><div id="latestPublished" class="body"></div></section>
     </section>
 
     <section id="view-cards" class="view">
@@ -157,15 +159,15 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
           </select>
           <select id="sortFilter">
             <option value="demand">Sort: Demand score</option><option value="usage">Sort: Official usage</option>
-            <option value="klx">Sort: KLX 2026 decks</option><option value="price">Sort: Market price</option>
+            <option value="klx">Sort: KLX latest year decks</option><option value="price">Sort: Market price</option>
             <option value="change">Sort: Price change</option><option value="name">Sort: Name</option>
           </select>
         </div>
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th></th><th>Card</th><th>Type / Domain</th><th>Official usage</th><th>KLX 2026</th><th>Avg copies</th>
-              <th><span class="help" title="Demand score blends official top-deck share, KLX 2026 published deck frequency and typical copies. It is not TCGplayer units sold.">Demand</span></th>
+              <th></th><th>Card</th><th>Type / Domain</th><th>Official usage</th><th><span data-klx-year>KLX latest year</span></th><th>Avg copies</th>
+              <th><span class="help" title="Demand score blends official top-deck share, KLX latest year published deck frequency and typical copies. It is not TCGplayer units sold.">Demand</span></th>
               <th>Normal</th><th>Foil</th><th>Saved Δ</th><th>TCGplayer</th>
             </tr></thead>
             <tbody id="tbody"></tbody>
@@ -177,11 +179,11 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
 
     <section id="view-meta" class="view">
       <div class="stats">
-        <div class="stat"><span>Official sample</span><strong>391</strong><small>top decks</small></div>
-        <div class="stat"><span>Events</span><strong>11</strong><small>Regional Qualifiers</small></div>
-        <div class="stat"><span>Top main-deck card</span><strong style="font-size:16px">Defy</strong><small>33.2% of decks</small></div>
-        <div class="stat"><span>Top rune</span><strong style="font-size:16px">Chaos Rune</strong><small>35.8% of decks</small></div>
-        <div class="stat"><span>KLX archive</span><strong>641</strong><small>published lists / 32 events</small></div>
+        <div class="stat"><span>Official sample</span><strong id="metaDecks">—</strong><small>published top decks</small></div>
+        <div class="stat"><span>Events</span><strong id="metaEvents">—</strong><small>published source coverage</small></div>
+        <div class="stat"><span>Top main-deck card</span><strong id="metaTopCard" style="font-size:16px">—</strong><small id="metaTopCardUsage">—</small></div>
+        <div class="stat"><span>Top rune</span><strong id="metaTopRune" style="font-size:16px">—</strong><small id="metaTopRuneUsage">—</small></div>
+        <div class="stat"><span>KLX archive</span><strong id="metaArchive">—</strong><small id="metaArchiveEvents">Published KLX lists</small></div>
       </div>
       <div class="cards2">
         <section class="panel">
@@ -189,7 +191,7 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
           <div class="table-wrap" style="max-height:620px"><div id="archetypeList"></div></div>
         </section>
         <section class="panel">
-          <div class="panel-head"><div><h2>Winning Decks</h2><small>Regional Qualifier winners in the official snapshot</small></div></div>
+          <div class="panel-head"><div><h2>Winning Decks</h2><small>Published winners · source links included</small></div></div>
           <div id="winnerListMeta" class="body"></div>
         </section>
       </div>
@@ -205,9 +207,9 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
 
     <section id="view-method" class="view">
       <div class="cards3">
-        <section class="panel"><div class="body"><h3 style="margin-top:0">Demand score</h3><div class="callout"><b>55%</b> official RQ top-deck share, <b>30%</b> KLX 2026 published-list frequency, and <b>15%</b> typical/average copies. Missing components contribute 0. The score is a discovery aid, not a claim about TCGplayer sales volume.</div></div></section>
+        <section class="panel"><div class="body"><h3 style="margin-top:0">Demand score</h3><div class="callout"><b>55%</b> official RQ top-deck share, <b>30%</b> KLX latest year published-list frequency, and <b>15%</b> typical/average copies. Missing components contribute 0. The score is a discovery aid, not a claim about TCGplayer sales volume.</div></div></section>
         <section class="panel"><div class="body"><h3 style="margin-top:0">Prices</h3><div class="callout">RiftHunt's free API supplies the full catalogue and a daily TCGplayer price export with separate normal/foil finishes and exact TCGplayer product links. This page stores local snapshots in your browser so it can show changes after you use it over time.</div></div></section>
-        <section class="panel"><div class="body"><h3 style="margin-top:0">Tournament data</h3><div class="callout">Official usage comes from 391 published top decks across 11 Regional Qualifiers. KLXCards provides a separate archive of published tournament decklists. Coverage is public-source coverage, not every deck ever played.</div></div></section>
+        <section class="panel"><div class="body"><h3 style="margin-top:0">Tournament data</h3><div class="callout">Riftbound Zone usage, win rates, winners and KLXCards card histories are checked automatically about once an hour. Refresh loads the latest collected tournament data. Source websites can publish late or change their layouts; failed checks keep the last successful data and its timestamp. Coverage includes published most-played cards, not every deck ever played. Selected best finishes and top archetypes come directly from KLXCards.</div></div></section>
       </div>
       <section class="panel" style="margin-top:14px"><div class="body">
         <h3 style="margin-top:0">Important interpretation</h3>
@@ -228,35 +230,43 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
 <div id="toast" class="toast"></div>
 
 <script>
-const OFFICIAL_USAGE = {"Defy": {"pct": 33.2, "decks": 130, "avg": 2.8, "zone": "Main"}, "Discipline": {"pct": 32.0, "decks": 125, "avg": 2.9, "zone": "Main"}, "Stacked Deck": {"pct": 27.9, "decks": 109, "avg": 2.9, "zone": "Main"}, "Punch First": {"pct": 24.3, "decks": 95, "avg": 2.4, "zone": "Main"}, "Hidden Blade": {"pct": 23.3, "decks": 91, "avg": 2.4, "zone": "Main"}, "Noxus Hopeful": {"pct": 22.5, "decks": 88, "avg": 2.8, "zone": "Main"}, "Sabotage": {"pct": 22.5, "decks": 88, "avg": 2.1, "zone": "Main"}, "Stupefy": {"pct": 22.0, "decks": 86, "avg": 2.8, "zone": "Main"}, "Charm": {"pct": 22.0, "decks": 86, "avg": 2.0, "zone": "Main"}, "Thousand-Tailed Watcher": {"pct": 21.2, "decks": 83, "avg": 2.1, "zone": "Main"}, "Tideturner": {"pct": 20.5, "decks": 80, "avg": 2.5, "zone": "Main"}, "Ride The Wind": {"pct": 20.2, "decks": 79, "avg": 2.0, "zone": "Main"}, "Gust": {"pct": 19.9, "decks": 78, "avg": 2.0, "zone": "Main"}, "Falling Star": {"pct": 18.9, "decks": 74, "avg": 2.1, "zone": "Main"}, "Ferrous Forerunner": {"pct": 18.7, "decks": 73, "avg": 2.2, "zone": "Main"}, "Star-Crossed": {"pct": 18.2, "decks": 71, "avg": 1.9, "zone": "Main"}, "Kai'Sa, Survivor": {"pct": 17.6, "decks": 69, "avg": 2.8, "zone": "Main"}, "Challenge": {"pct": 17.1, "decks": 67, "avg": 2.2, "zone": "Main"}, "Zhonya's Hourglass": {"pct": 16.4, "decks": 64, "avg": 2.1, "zone": "Main"}, "Traveling Merchant": {"pct": 16.1, "decks": 63, "avg": 2.8, "zone": "Main"}, "Rebuke": {"pct": 16.1, "decks": 63, "avg": 1.6, "zone": "Main"}, "Hard Bargain": {"pct": 16.1, "decks": 63, "avg": 1.3, "zone": "Main"}, "En Garde": {"pct": 15.9, "decks": 62, "avg": 2.4, "zone": "Main"}, "Vex, Apathetic": {"pct": 14.8, "decks": 58, "avg": 2.0, "zone": "Main"}, "First Mate": {"pct": 14.6, "decks": 57, "avg": 2.7, "zone": "Main"}, "Singularity": {"pct": 14.6, "decks": 57, "avg": 1.8, "zone": "Main"}, "Cleave": {"pct": 14.3, "decks": 56, "avg": 2.1, "zone": "Main"}, "Fizz, Trickster": {"pct": 14.3, "decks": 56, "avg": 2.0, "zone": "Main"}, "Back Off": {"pct": 14.1, "decks": 55, "avg": 1.8, "zone": "Main"}, "Dazzling Aurora": {"pct": 13.6, "decks": 53, "avg": 3.0, "zone": "Main"}, "Lonely Poro": {"pct": 13.6, "decks": 53, "avg": 2.8, "zone": "Main"}, "Scuttle Crab": {"pct": 13.6, "decks": 53, "avg": 2.5, "zone": "Main"}, "Time Warp": {"pct": 13.0, "decks": 51, "avg": 1.7, "zone": "Main"}, "Catalyst of Aeons": {"pct": 12.8, "decks": 50, "avg": 3.0, "zone": "Main"}, "Not So Fast": {"pct": 12.8, "decks": 50, "avg": 1.4, "zone": "Main"}, "Mobilize": {"pct": 12.5, "decks": 49, "avg": 3.0, "zone": "Main"}, "Cull the Weak": {"pct": 12.5, "decks": 49, "avg": 2.4, "zone": "Main"}, "Switcheroo": {"pct": 12.3, "decks": 48, "avg": 1.8, "zone": "Main"}, "Plundering Poro": {"pct": 11.5, "decks": 45, "avg": 2.7, "zone": "Main"}, "Bellows Breath": {"pct": 11.3, "decks": 44, "avg": 2.2, "zone": "Main"}, "Chaos Rune": {"pct": 35.8, "decks": 140, "avg": 6.3, "zone": "Rune"}, "Body Rune": {"pct": 33.8, "decks": 132, "avg": 6.6, "zone": "Rune"}, "Order Rune": {"pct": 33.2, "decks": 130, "avg": 5.6, "zone": "Rune"}, "Calm Rune": {"pct": 33.0, "decks": 129, "avg": 6.1, "zone": "Rune"}, "Fury Rune": {"pct": 32.0, "decks": 125, "avg": 5.8, "zone": "Rune"}, "Mind Rune": {"pct": 31.2, "decks": 122, "avg": 5.7, "zone": "Rune"}, "Monastery of Hirana": {"pct": 0.3, "decks": 1, "avg": 1.0, "zone": "Rune"}, "Sunken Temple": {"pct": 13.6, "decks": 53, "avg": null, "zone": "Battlefield"}, "Amateur Recital": {"pct": 0.3, "decks": 1, "avg": 1.0, "zone": "Rune"}, "Aspirant's Climb": {"pct": 16.4, "decks": 64, "avg": null, "zone": "Battlefield"}, "Zaun Warrens": {"pct": 15.9, "decks": 62, "avg": null, "zone": "Battlefield"}, "The Arena's Greatest": {"pct": 14.6, "decks": 57, "avg": null, "zone": "Battlefield"}, "Seat of Power": {"pct": 13.8, "decks": 54, "avg": null, "zone": "Battlefield"}, "Sigil of the Storm": {"pct": 13.0, "decks": 51, "avg": null, "zone": "Battlefield"}, "Targon's Peak": {"pct": 12.3, "decks": 48, "avg": null, "zone": "Battlefield"}, "Trifarian War Camp": {"pct": 10.7, "decks": 42, "avg": null, "zone": "Battlefield"}, "Vilemaw's Lair": {"pct": 10.5, "decks": 41, "avg": null, "zone": "Battlefield"}, "Star Spring": {"pct": 10.0, "decks": 39, "avg": null, "zone": "Battlefield"}, "Master Yi, Tempered": {"pct": 4.1, "decks": 16, "avg": null, "zone": "Champion"}, "Irelia, Fervent": {"pct": 3.8, "decks": 15, "avg": null, "zone": "Champion"}, "Draven, Showboat": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Champion"}, "Azir, Sovereign": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Champion"}, "Diana, Lunari": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Champion"}, "Annie, Stubborn": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Champion"}, "Ezreal, Prodigy": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Champion"}, "Lucian, Merciless": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Champion"}, "Jax, Unmatched": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Champion"}, "Sivir, Mercenary": {"pct": 2.3, "decks": 9, "avg": null, "zone": "Champion"}, "Rek'Sai, Breacher": {"pct": 2.3, "decks": 9, "avg": null, "zone": "Champion"}, "Renata Glasc, Mastermind": {"pct": 2.3, "decks": 9, "avg": null, "zone": "Champion"}, "Rumble, Hotheaded": {"pct": 2.3, "decks": 9, "avg": null, "zone": "Champion"}, "Volibear, Furious": {"pct": 2.0, "decks": 8, "avg": null, "zone": "Champion"}, "Miss Fortune, Captain": {"pct": 2.0, "decks": 8, "avg": null, "zone": "Champion"}, "Draven, Glorious Executioner": {"pct": 4.1, "decks": 16, "avg": null, "zone": "Legend", "top8": 9}, "Irelia, Blade Dancer": {"pct": 3.8, "decks": 15, "avg": null, "zone": "Legend", "top8": 11}, "Diana, Scorn of the Moon": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Legend", "top8": 8}, "Azir, Emperor of the Sands": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Legend", "top8": 6}, "Master Yi, Wuju Bladesman": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 7}, "Sivir, Battle Mistress": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 2}, "Fiora, Grand Duelist": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 1}, "Jax, Grandmaster At Arms": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 1}, "Rek'Sai, Void Burrower": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 1}, "Renata Glasc, Chem-Baroness": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 0}, "Lucian, Purifier": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 0}, "Rumble, Mechanized Menace": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 0}, "Kennen, Heart of the Tempest": {"pct": 2.0, "decks": 8, "avg": null, "zone": "Legend", "top8": 7}, "Annie, Dark Child": {"pct": 1.8, "decks": 7, "avg": null, "zone": "Legend", "top8": 4}};
-const KLX_2026 = {"Defy": {"decks": 153, "tournaments": 18, "typical": 3}, "Stacked Deck": {"decks": 149, "tournaments": 17, "typical": 3}, "Discipline": {"decks": 148, "tournaments": 18, "typical": 3}, "Punch First": {"decks": 112, "tournaments": 17, "typical": 3}, "Charm": {"decks": 111, "tournaments": 18, "typical": 2}, "Stupefy": {"decks": 109, "tournaments": 16, "typical": 3}, "Noxus Hopeful": {"decks": 104, "tournaments": 16, "typical": 3}, "Thousand-Tailed Watcher": {"decks": 103, "tournaments": 16, "typical": 2}, "Hidden Blade": {"decks": 100, "tournaments": 16, "typical": 3}, "Ride The Wind": {"decks": 95, "tournaments": 17, "typical": 2}, "Sabotage": {"decks": 95, "tournaments": 17, "typical": 2}, "Tideturner": {"decks": 93, "tournaments": 18, "typical": 3}, "Hard Bargain": {"decks": 92, "tournaments": 18, "typical": 1}, "Gust": {"decks": 91, "tournaments": 16, "typical": 2}, "Star-Crossed": {"decks": 91, "tournaments": 12, "typical": 2}, "Ferrous Forerunner": {"decks": 87, "tournaments": 16, "typical": 2}, "Kai'Sa, Survivor": {"decks": 86, "tournaments": 16, "typical": 3}, "Vex, Apathetic": {"decks": 85, "tournaments": 12, "typical": 2}, "Falling Star": {"decks": 83, "tournaments": 16, "typical": 2}, "Fizz, Trickster": {"decks": 83, "tournaments": 18, "typical": 2}, "Rebuke": {"decks": 83, "tournaments": 17, "typical": 2}, "En Garde": {"decks": 80, "tournaments": 18, "typical": 3}, "Zhonya's Hourglass": {"decks": 74, "tournaments": 18, "typical": 2}, "Challenge": {"decks": 72, "tournaments": 16, "typical": 2}};
-const COMPETITIVE = {"Defy": {"allDecks": 169, "allTournaments": 28, "best": "1st", "first": "Nov 22, 2025", "latest": "Aug 22, 2026", "typical": 3, "archetypes": [["Master Yi, Wuju Bladesman", 44], ["Irelia, Blade Dancer", 26], ["Emperor of the Sands", 11], ["Yasuo, Unforgiven", 11], ["Ahri, Nine-Tailed Fox", 10]], "placements": [["1st", "MICE TheManLand", "Ornn, Fire Below the Mountain", "Regional Qualifier Barcelona", "Aug 22, 2026", 3], ["1st", "Factor", "Master Yi, Wuju Bladesman", "Regional Qualifier Hartford", "Jun 20, 2026", 3], ["1st", "Squirtle", "Emperor of the Sands", "Regional Qualifier Utrecht", "Jun 13, 2026", 3], ["1st", "Vicer", "Master Yi, Wuju Bladesman", "Runes and Rift Weekly 15", "May 20, 2026", 3], ["1st", "Rico1997", "Irelia, Blade Dancer", "Regional Qualifiers Sydney", "May 16, 2026", 3]], "alongside": [["Calm Rune", 169], ["Discipline", 165], ["Charm", 142], ["Zhonya's Hourglass", 101], ["En Garde", 100], ["Not So Fast", 86]]}, "Stacked Deck": {"allDecks": 203, "allTournaments": 30, "best": "1st", "first": "Nov 8, 2025", "latest": "Sep 4, 2026", "typical": 3, "archetypes": [["Annie, Dark Child", 37], ["Draven, Glorious Executioner", 29], ["Miss Fortune, Bounty Hunter", 25], ["Ezreal, Prodigal Explorer", 17], ["Teemo, Swift Scout", 16]], "placements": [["1st", "Joshua Chan", "Ezreal, Prodigal Explorer", "Haven Online Challenger Series #2", "Aug 2, 2026", 3], ["1st", "Cameren Kawamoto", "Ezreal, Prodigal Explorer", "Pittsburgh Showdown", "Jul 11, 2026", 3], ["1st", "fafafgvcwrqrebcg", "Ezreal, Prodigal Explorer", "Pro-Play Summit Dallas", "Jul 4, 2026", 3], ["1st", "CTG Alanzq", "Diana, Scorn of the Moon", "Regional Qualifier Vancouver", "May 30, 2026", 3], ["1st", "Rico1997", "Irelia, Blade Dancer", "Regional Qualifiers Sydney", "May 16, 2026", 2]], "alongside": [["Chaos Rune", 203], ["Gust", 132], ["Rebuke", 129], ["Ride the Wind", 115], ["Hard Bargain", 105], ["Traveling Merchant", 102]]}};
-const ARCHETYPES = [["Azir, Emperor of the Sands", 85.9, 106, 8], ["Kennen, Heart of the Tempest", 84.3, 99, 7], ["Master Yi, Wuju Bladesman", 82.8, 134, 10], ["Rengar, Pridestalker", 82.8, 64, 5], ["Diana, Scorn of the Moon", 82.7, 136, 10], ["Irelia, Blade Dancer", 82.1, 156, 12], ["Annie, Dark Child", 80.7, 93, 7], ["Ezreal, Prodigal Explorer", 80.2, 101, 8], ["Draven, Glorious Executioner", 80.2, 189, 14], ["Viktor, Herald of the Arcane", 78.7, 87, 7], ["Sivir, Battle Mistress", 78.7, 101, 8], ["LeBlanc, Deceiver", 78.4, 74, 6], ["Rek'Sai, Void Burrower", 77.6, 107, 9], ["Vex, Gloomist", 76.6, 77, 6], ["Fiora, Grand Duelist", 75.7, 111, 9], ["Kha'Zix, Voidreaver", 75.3, 77, 6], ["Sett, The Boss", 74.7, 89, 7], ["Kai'Sa, Daughter of the Void", 74.7, 85, 7], ["Lux, Lady of Luminosity", 74.0, 73, 6], ["Teemo, Swift Scout", 73.5, 81, 7], ["Lucian, Purifier", 72.7, 110, 9], ["Darius, Hand of Noxus", 72.7, 86, 7], ["Lillia, Bashful Bloom", 72.3, 74, 6], ["Ornn, Fire Below the Mountain", 71.3, 108, 9], ["Jhin, Virtuoso", 71.2, 66, 6], ["Miss Fortune, Bounty Hunter", 70.0, 85, 7], ["Pyke, Bloodharbor Ripper", 69.6, 69, 6], ["Volibear, Relentless Storm", 68.4, 79, 7], ["Ahri, Nine-Tailed Fox", 68.3, 82, 7], ["Poppy, Keeper of the Hammer", 66.7, 69, 6], ["Jinx, Loose Cannon", 66.1, 59, 6], ["Rumble, Mechanized Menace", 64.3, 77, 9], ["Jax, Grandmaster At Arms", 64.0, 89, 8], ["Master Yi, Wuju Master", 63.5, 63, 6], ["Lee Sin, Blind Monk", 63.1, 80, 7], ["Yasuo, Unforgiven", 62.9, 85, 7], ["Leona, Radiant Dawn", 61.5, 65, 7], ["Vi, Piltover Enforcer", 60.8, 65, 6], ["Renata Glasc, Chem-Baroness", 60.4, 77, 9], ["Garen, Might of Demacia", 59.8, 56, 7], ["Ivern, Green Father", 56.4, 55, 5]];
-const WINNERS = [["Angeles", "Sep 27, 2026", "DSG Prismaticism", "Rengar, Pridestalker", "Rengar, Trophy Hunter"], ["Singapore", "Sep 6, 2026", "Gorica", "Akali, Rogue Assassin", "Akali, Deadly Weapon"], ["Barcelona", "Aug 23, 2026", "MICE TheManland", "Ornn, Fire Below the Mountain", "Ornn, Blacksmith"], ["Hartford", "Jun 21, 2026", "Factor", "Master Yi, Wuju Bladesman", "Master Yi, Tempered"], ["Utrecht", "Jun 14, 2026", "Squirtle", "Azir, Emperor of the Sands", "Azir, Sovereign"], ["Vancouver", "May 31, 2026", "Alanzq", "Diana, Scorn of the Moon", "Diana, Lunari"], ["Sydney", "May 17, 2026", "EDG Rico1997", "Irelia, Blade Dancer", "Irelia, Fervent"], ["Atlanta", "Apr 26, 2026", "Prismaticismism", "Annie, Dark Child", "Annie, Stubborn"], ["Lille", "Apr 19, 2026", "Squirtle", "Azir, Emperor of the Sands", "Azir, Sovereign"], ["Vegas", "Mar 1, 2026", "SAMDSHERMAN", "Draven, Glorious Executioner", "Draven, Vanquisher"]];
+let OFFICIAL_USAGE = {};
+let KLX_2026 = {};
+let COMPETITIVE = {};
+let ARCHETYPES = [];
+let WINNERS = [];
 
 let allPrints=[], prices=[], uniqueCards=[], filtered=[], displayMode="unique", watchOnly=false, page=1;
 const pageSize=100;
 const $=id=>document.getElementById(id);
-const watch=new Set(JSON.parse(localStorage.getItem("rb-watch-v1")||"[]"));
-let compare=JSON.parse(localStorage.getItem("rb-compare-v1")||"[]").slice(0,4);
-let priceMap=new Map(), priceBySlug=new Map(), priceByIdCollector=new Map();
+const storage={getItem(key){try{return window.localStorage.getItem(key)}catch{return null}},setItem(key,value){try{window.localStorage.setItem(key,value)}catch{}}};
+function savedArray(key){try{const v=JSON.parse(storage.getItem(key)||"[]");return Array.isArray(v)?v:[]}catch{return []}}
+const watch=new Set(savedArray("rb-watch-v1"));
+let compare=savedArray("rb-compare-v1").slice(0,4);
+let priceMap=new Map(), priceBySlug=new Map(), priceByIdCollector=new Map(),priceByTcg=new Map();
+let sourceState=null, latestResults=[], isRefreshing=false;
+const DATA_ROOT="https://raw.githubusercontent.com/bing-bot-boop/riftbound-market-pulse/main/data/";
 
+function lookupName(obj,name){return obj[name]||Object.entries(obj).find(([key])=>key.toLowerCase()===name.toLowerCase())?.[1]}
+function cardLink(c){const tcg=c?.tcgId||c?.tcg_id;return tcg?"https://www.tcgplayer.com/product/"+encodeURIComponent(tcg):cardPrices(c).url}
+function sourceLink(url,label){return `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`}
+function stamp(value){if(!value)return "unknown";const d=new Date(value);return Number.isNaN(d.valueOf())?"unknown":d.toLocaleString()}
 function canon(s){return String(s||"").trim()}
 function nameOf(c){return canon(c.oracle_name||c.name||c.printed_name)}
 function norm(s){return canon(s).toLowerCase()}
 function arr(v){return Array.isArray(v)?v:(v?[v]:[])}
 function typeOf(c){return canon(c.type||c.card_type||c.type_line||"Unknown")}
 function setCode(c){return canon(c.set_code||c.set||c.expansion_code||"")}
-function setName(c){return canon(c.set_name||c.expansion_name||setCode(c)||"Unknown set")}
+function setName(c){return canon(c.set_name||c.setName||c.expansion_name||setCode(c)||"Unknown set")}
 function rarityOf(c){return canon(c.rarity||"Unknown")}
 function domainsOf(c){return arr(c.domains||c.domain).map(x=>typeof x==="string"?x:(x?.name||"")).filter(Boolean)}
-function collectorOf(c){return canon(c.collector_number||c.collector||c.number||"")}
+function collectorOf(c){return canon(c.collector_number||c.collector||((c.riftboundId||c.riftbound_id||"").split("-")[1])||c.number||(c.num!=null?String(c.num).padStart(3,"0"):""))}
 function slugOf(c){return canon(c.slug||c.product_slug||"")}
 function rbIdOf(c){return canon(c.riftbound_id||c.riftboundId||c.card_id||"")}
 function cardKey(c){return [rbIdOf(c),collectorOf(c),slugOf(c)].join("|")}
 function cardImage(c){
  const i=c?.image_uris||c?.images||{};
- return c?.image_url||c?.imageUrl||i?.large||i?.normal||i?.png||i?.small||c?.image||null;
+ return c?.image_url||c?.imageUrl||c?.imgUrl||i?.full||i?.large||i?.normal||i?.png||i?.thumb||i?.small||(c?.tcgId?`https://tcgplayer-cdn.tcgplayer.com/product/${c.tcgId}_in_1000x1000.jpg`:null);
 }
 function purchaseCard(c){
  return c?.purchase_uris?.tcgplayer||c?.purchaseUri||null;
@@ -268,8 +278,9 @@ function priceValue(o){
  return o.market??o.marketPrice??o.price??o.mid??null;
 }
 function buildPriceMaps(){
- priceMap=new Map();priceBySlug=new Map();priceByIdCollector=new Map();
+ priceMap=new Map();priceBySlug=new Map();priceByIdCollector=new Map();priceByTcg=new Map();
  for(const p of prices){
+   if(p.tcgId||p.tcg_id)priceByTcg.set(String(p.tcgId||p.tcg_id),p);
    const rid=canon(p.riftboundId||p.riftbound_id), col=canon(p.collector||p.collector_number), sl=canon(p.slug);
    priceMap.set([rid,col,sl].join("|"),p);
    if(sl)priceBySlug.set(sl,p);
@@ -280,14 +291,14 @@ function priceRow(c){
  const exact=priceMap.get(cardKey(c));
  const slug=slugOf(c)?priceBySlug.get(slugOf(c)):null;
  const idcol=priceByIdCollector.get([rbIdOf(c),collectorOf(c)].join("|"));
- return exact||slug||idcol||null;
+ return priceByTcg.get(String(c.tcgId||c.tcg_id||""))||exact||slug||idcol||null;
 }
 function cardPrices(c){
  const p=priceRow(c), f=p?.finishes||p?.prices||{};
  return {normal:priceValue(f.normal??f.nonfoil??f.standard),foil:priceValue(f.foil),url:p?.purchaseUri||p?.purchase_uri||purchaseCard(c)||tcgFallback(nameOf(c))};
 }
-function usageOf(c){return OFFICIAL_USAGE[nameOf(c)]||null}
-function klxOf(c){return KLX_2026[nameOf(c)]||null}
+function usageOf(c){return lookupName(OFFICIAL_USAGE,nameOf(c))||null}
+function klxOf(c){return lookupName(KLX_2026,nameOf(c))||null}
 function demandScore(c){
  const u=usageOf(c),k=klxOf(c);
  const uN=Math.min(1,(u?.pct||0)/35.8);
@@ -300,7 +311,7 @@ function safeId(s){return btoa(unescape(encodeURIComponent(s))).replaceAll("=","
 function isWatched(c){return watch.has(nameOf(c))}
 function toggleWatch(name){
  if(watch.has(name))watch.delete(name);else watch.add(name);
- localStorage.setItem("rb-watch-v1",JSON.stringify([...watch]));
+ storage.setItem("rb-watch-v1",JSON.stringify([...watch]));
  updateWatchCount();applyFilters();toast(watch.has(name)?"Added to watchlist":"Removed from watchlist");
 }
 function updateWatchCount(){$("watchCount").textContent=watch.size}
@@ -347,7 +358,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function snapshotKey(){return "rb-price-history-v2"}
 function snapshotPrices(){
  try{
-   const hist=JSON.parse(localStorage.getItem(snapshotKey())||"[]");
+   const hist=JSON.parse(storage.getItem(snapshotKey())||"[]");
    const today=new Date().toISOString().slice(0,10);
    if(hist.some(x=>x.date===today))return;
    const data={};
@@ -357,12 +368,12 @@ function snapshotPrices(){
    }
    hist.push({date:today,data});
    while(hist.length>60)hist.shift();
-   localStorage.setItem(snapshotKey(),JSON.stringify(hist));
+   storage.setItem(snapshotKey(),JSON.stringify(hist));
  }catch(e){}
 }
 function savedChange(c){
  try{
-   const hist=JSON.parse(localStorage.getItem(snapshotKey())||"[]");
+   const hist=JSON.parse(storage.getItem(snapshotKey())||"[]");
    if(hist.length<2)return null;
    const now=cardPrices(c).normal, prev=hist[hist.length-2]?.data?.[nameOf(c)];
    if(now==null||prev==null||prev===0)return null;
@@ -371,7 +382,7 @@ function savedChange(c){
 }
 function priceHistory(name){
  try{
-   return JSON.parse(localStorage.getItem(snapshotKey())||"[]")
+   return JSON.parse(storage.getItem(snapshotKey())||"[]")
     .map(x=>({date:x.date,price:x.data?.[name]})).filter(x=>x.price!=null);
  }catch(e){return []}
 }
@@ -418,7 +429,7 @@ function renderTable(){
       <button class="star ${isWatched(c)?"on":""}" data-watch="${esc(n)}" title="Watch this card">★</button>
       <input class="check comparebox" type="checkbox" ${checked} data-compare="${esc(n)}" title="Compare this card">
     </td>
-    <td><div class="cardcell">${img?`<img class="thumb" src="${esc(img)}" loading="lazy" onerror="this.style.visibility='hidden'">`:"<div class='thumb'></div>"}<div><span class="cardname"><a href="${esc(p.url)}" target="_blank" onclick="event.stopPropagation()">${esc(n)}</a></span><span class="sub">${esc(setName(c))} • ${esc(collectorOf(c))} • ${esc(rarityOf(c))}</span></div></div></td>
+    <td><div class="cardcell">${img?`<img class="thumb" src="${esc(img)}" alt="${esc(n)}" loading="lazy" onerror="this.alt='Image unavailable';this.style.opacity='.35'">`:"<div class='thumb'></div>"}<div><span class="cardname"><a href="${esc(p.url)}" target="_blank" onclick="event.stopPropagation()">${esc(n)}</a></span><span class="sub">${esc(setName(c))} • ${esc(collectorOf(c))} • ${esc(rarityOf(c))}</span></div></div></td>
     <td>${esc(typeOf(c))}<span class="sub">${esc(domainsOf(c).join(" · ")||"—")}</span></td>
     <td>${u?`<span class="badge ${u.pct>=20?"hot":"mid"}">${u.pct.toFixed(1)}%</span><span class="sub">${u.decks} top decks · ${u.zone}</span>`:`<span class="badge dim">Not published</span>`}</td>
     <td>${k?`<b>${k.decks}</b><span class="sub">${k.tournaments} tournaments</span>`:"—"}</td>
@@ -440,7 +451,7 @@ function toggleCompare(name,on){
    if(compare.length>=4){toast("You can compare up to 4 cards.");renderTable();return}
    compare.push(name);
  }else if(!on){compare=compare.filter(x=>x!==name)}
- localStorage.setItem("rb-compare-v1",JSON.stringify(compare));renderCompareTray();renderCompare();
+ storage.setItem("rb-compare-v1",JSON.stringify(compare));renderCompareTray();renderCompare();
 }
 function renderCompareTray(){
  $("compareTray").classList.toggle("show",compare.length>0);
@@ -456,7 +467,7 @@ function renderCompare(){
    ["Set",...cs.map(c=>esc(setName(c)))],
    ["Official usage",...cs.map(c=>usageOf(c)?usageOf(c).pct.toFixed(1)+"%":"—")],
    ["Official top decks",...cs.map(c=>usageOf(c)?.decks??"—")],
-   ["KLX 2026 decks",...cs.map(c=>klxOf(c)?.decks??"—")],
+   ["KLX latest year decks",...cs.map(c=>klxOf(c)?.decks??"—")],
    ["Typical / avg copies",...cs.map(c=>usageOf(c)?.avg??klxOf(c)?.typical??"—")],
    ["Demand score",...cs.map(c=>demandScore(c)+"/100")],
    ["Normal market",...cs.map(c=>money(cardPrices(c).normal))],
@@ -468,8 +479,8 @@ function renderCompare(){
 
 function openDetail(c){
  if(!c)return;
- const n=nameOf(c),u=usageOf(c),k=klxOf(c),p=cardPrices(c),ev=COMPETITIVE[n],img=cardImage(c),d=demandScore(c),hist=priceHistory(n),chg=savedChange(c);
- const klxSearch="https://www.google.com/search?q="+encodeURIComponent('site:klxcards.com/card-library/riftbound/ "'+n+'"');
+ const n=nameOf(c),u=usageOf(c),k=klxOf(c),p=cardPrices(c),ev=lookupName(COMPETITIVE,n),img=cardImage(c),d=demandScore(c),hist=priceHistory(n),chg=savedChange(c);
+ const klxSearch=ev?.url||"https://klxcards.com/decks/riftbound/";
  const deckSearch="https://www.google.com/search?q="+encodeURIComponent('site:klxcards.com/decks/riftbound/standard/ "'+n+'"');
  const rbDeckSearch="https://www.google.com/search?q="+encodeURIComponent('site:riftbounddecklists.com "'+n+'"');
  const rules=canon(c.effect||c.text||c.rules_text||c.oracle_text||"");
@@ -479,9 +490,9 @@ function openDetail(c){
     <div class="metric"><small>Best finish</small><b>${ev.best}</b></div><div class="metric"><small>Latest</small><b>${ev.latest}</b></div>
     <div class="metric"><small>Typical copies</small><b>${ev.typical}</b></div>
    </div>`:"";
- const arch=ev?.archetypes?.length?`<div class="block"><h3>Archetypes using this card</h3><div class="chips">${ev.archetypes.map(a=>`<span class="chip">${esc(a[0])} · ${a[1]} decks</span>`).join("")}</div></div>`:
+ const arch=ev?.archetypes?.length?`<div class="block"><h3>Archetypes using this card</h3><div class="chips">${ev.archetypes.map(a=>`<span class="chip">${sourceLink(a[2]||ev.url||"https://klxcards.com/decks/riftbound/",a[0])} · ${a[1]} decks</span>`).join("")}</div></div>`:
    `<div class="block"><h3>Archetype spread</h3><div class="callout">A verified per-card archetype breakdown is not embedded for this card yet. Open KLXCards below for the live tournament archive instead of treating missing data as zero.</div></div>`;
- const placements=ev?.placements?.length?`<div class="block"><h3>Recent / best published placements</h3>${ev.placements.map(x=>`<div class="placement"><b>${esc(x[0])} — ${esc(x[1])} · ${esc(x[2])}</b><small>${esc(x[3])} · ${esc(x[4])} · ${x[5]} copies</small></div>`).join("")}</div>`:
+ const placements=ev?.placements?.length?`<div class="block"><h3>Best published placements</h3><small>Selected best finishes supplied by KLXCards; not a complete chronological list.</small>${ev.placements.map(x=>`<div class="placement"><b>${sourceLink(x[6]||ev.url||"https://klxcards.com/decks/riftbound/",x[0]+" — "+x[1]+" · "+x[2])}</b><small>${sourceLink(x[7]||ev.url||"https://klxcards.com/decks/riftbound/",x[3])} · ${esc(x[4])} · ${x[5]} copies</small></div>`).join("")}</div>`:
    `<div class="block"><h3>Placements</h3><div class="callout">Use the tournament search below for live published placements containing this card.</div></div>`;
  const alongside=ev?.alongside?.length?`<div class="block"><h3>Often seen alongside</h3><div class="chips">${ev.alongside.map(a=>`<span class="chip">${esc(a[0])} · ${a[1]}</span>`).join("")}</div></div>`:"";
  const histText=hist.length?`${hist.length} local price snapshot${hist.length===1?"":"s"} saved (${hist[0].date} → ${hist.at(-1).date})`:"No local price history yet";
@@ -492,15 +503,16 @@ function openDetail(c){
     <div class="metrics">
       <div class="metric"><small>Demand score</small><b>${d}/100</b></div>
       <div class="metric"><small>Official usage</small><b>${u?u.pct.toFixed(1)+"%":"—"}</b></div>
-      <div class="metric"><small>KLX 2026 decks</small><b>${k?.decks??"—"}</b></div>
+      <div class="metric"><small>KLX latest year decks</small><b>${k?.decks??"—"}</b></div>
       <div class="metric"><small>Normal market</small><b>${money(p.normal)}</b></div>
       <div class="metric"><small>Foil market</small><b>${money(p.foil)}</b></div>
     </div>
     ${evHtml}
+    ${ev?`<small>KLX card history checked ${esc(stamp(ev.checkedAt))}${ev.error?" · last successful data retained":""}. ${sourceLink(ev.url,"Card history source")}</small>`:""}
     ${rules?`<div class="block"><h3>Card text</h3><div class="callout">${esc(rules)}</div></div>`:""}
     <div class="detailcols">${arch}${placements}</div>
     ${alongside}
-    <div class="block" style="margin-top:12px"><h3>Price tracking</h3><div class="callout">${histText}${chg!=null?` · change since previous saved snapshot: <b class="${chg>=0?"pos":"neg"}">${chg>=0?"+":""}${chg.toFixed(1)}%</b>`:""}. Snapshots are stored only in this browser.</div></div>
+    <div class="block" style="margin-top:12px"><h3>Price tracking</h3><div class="callout">${histText} · Price row last updated: ${esc(stamp(priceRow(c)?.updatedAt||priceRow(c)?.updated_at))}${chg!=null?` · change since previous saved snapshot: <b class="${chg>=0?"pos":"neg"}">${chg>=0?"+":""}${chg.toFixed(1)}%</b>`:""}. Snapshots are stored only in this browser.</div></div>
     <div class="links">
       <a class="linkbtn" href="${esc(p.url)}" target="_blank">TCGplayer exact/search page ↗</a>
       <a class="linkbtn" href="${klxSearch}" target="_blank">KLX card history ↗</a>
@@ -523,19 +535,19 @@ function renderOverview(){
  const top=ranked.slice(0,10);
  $("hotGrid").innerHTML=top.slice(0,5).map(c=>{
   const p=cardPrices(c),u=usageOf(c),img=cardImage(c);
-  return `<div class="hotcard" data-hot="${esc(nameOf(c))}"><div class="mini">${img?`<img src="${esc(img)}" loading="lazy">`:"<div style='width:45px'></div>"}<div><b>${esc(nameOf(c))}</b><small>${u?u.pct.toFixed(1)+"% official usage":"Tournament tracked"}</small><div class="big">${demandScore(c)}</div><small>Demand score · ${money(p.normal)}</small></div></div></div>`;
+  return `<div class="hotcard" data-hot="${esc(nameOf(c))}"><div class="mini">${img?`<img src="${esc(img)}" alt="${esc(nameOf(c))}" loading="lazy">`:"<div style='width:45px'></div>"}<div><b><a href="${esc(cardLink(c))}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${esc(nameOf(c))} ↗</a></b><small>${u?u.pct.toFixed(1)+"% official usage":"Tournament tracked"}</small><div class="big">${demandScore(c)}</div><small>Demand score · ${money(p.normal)}</small></div></div></div>`;
  }).join("");
  document.querySelectorAll("[data-hot]").forEach(x=>x.onclick=()=>openDetail(findCardByName(x.dataset.hot)));
- $("overviewRanks").innerHTML=top.map((c,i)=>`<div class="rank"><span class="num">${i+1}</span><div><b>${esc(nameOf(c))}</b><small>${usageOf(c)?.pct?.toFixed(1)??"—"}% official · ${klxOf(c)?.decks??"—"} KLX 2026 lists</small></div><span class="kpi">${money(cardPrices(c).normal)}</span></div>`).join("");
+ $("overviewRanks").innerHTML=top.map((c,i)=>`<div class="rank"><span class="num">${i+1}</span><div><b>${sourceLink(cardLink(c),nameOf(c))}</b><small>${usageOf(c)?.pct?.toFixed(1)??"—"}% official · ${klxOf(c)?.decks??"—"} KLX latest year lists</small></div><span class="kpi">${money(cardPrices(c).normal)}</span></div>`).join("");
  $("winnerList").innerHTML=winnerHTML();
  $("winnerListMeta").innerHTML=winnerHTML();
 }
-function winnerHTML(){return WINNERS.map(w=>`<div class="winner"><time>${w[1]}<br>${esc(w[0])}</time><div><b>🏆 ${esc(w[3])}</b><small>${esc(w[2])} · paired with ${esc(w[4])}</small></div></div>`).join("")}
+function winnerHTML(){return WINNERS.map(w=>`<div class="winner"><time>${esc(w[1])}<br>${esc(w[0])}</time><div><b>🏆 ${sourceLink(cardLink(findCardByName(w[3])||{name:w[3]}),w[3])}</b><small>${esc(w[2])} · paired with ${esc(w[4])}</small><small>${sourceLink(w[5]||"https://riftbound.zone/en/meta-stats/","Published source")}</small></div></div>`).join("")}
 function renderMeta(){
- $("archetypeList").innerHTML=ARCHETYPES.map((a,i)=>`<div class="legend-row"><div><b>${i+1}. ${esc(a[0])}</b></div><span class="wr">${a[1].toFixed(1)}%</span><span>${a[2]} matches</span><span>${a[3]} pilots</span></div>`).join("");
+ $("archetypeList").innerHTML=ARCHETYPES.map((a,i)=>`<div class="legend-row"><div><b>${i+1}. ${sourceLink(a[4]||"https://riftbound.zone/en/meta-stats/",a[0])}</b></div><span class="wr">${a[1].toFixed(1)}%</span><span>${a[2]} matches</span><span>${a[3]} pilots</span></div>`).join("");
 }
 function exportCsv(){
- const rows=[["Card","Set","Collector","Type","Domains","Rarity","Official Usage %","Official Decks","KLX 2026 Decks","Avg Copies","Demand Score","Normal Market","Foil Market","Saved Change %","TCGplayer"]];
+ const rows=[["Card","Set","Collector","Type","Domains","Rarity","Official Usage %","Official Decks","KLX latest year Decks","Avg Copies","Demand Score","Normal Market","Foil Market","Saved Change %","TCGplayer"]];
  for(const c of filtered){
   const u=usageOf(c),k=klxOf(c),p=cardPrices(c),chg=savedChange(c);
   rows.push([nameOf(c),setName(c),collectorOf(c),typeOf(c),domainsOf(c).join("/"),rarityOf(c),u?.pct??"",u?.decks??"",k?.decks??"",u?.avg??k?.typical??"",demandScore(c),p.normal??"",p.foil??"",chg==null?"":chg,p.url]);
@@ -545,77 +557,87 @@ function exportCsv(){
 }
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1700)}
 
-async function fetchJSONResilient(url, cacheKey, timeoutMs=15000){
- const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),timeoutMs);
+async function fetchJSONResilient(url, cacheKey, timeoutMs=45000, backupName=null, reuseMs=0){
+ if(reuseMs){try{const v=JSON.parse(storage.getItem(cacheKey)||"null");if(v?.data&&Date.now()-new Date(v.saved).valueOf()<reuseMs)return {data:v.data,source:"daily catalogue cache",saved:v.saved};}catch{}}
+ const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{
   const r=await fetch(url,{cache:"no-store",signal:controller.signal});
-  if(!r.ok)throw Error(`${url} returned HTTP ${r.status}`);
-  const data=await r.json();
-  try{localStorage.setItem(cacheKey,JSON.stringify({saved:new Date().toISOString(),data}))}catch(e){}
+  if(!r.ok)throw Error(`HTTP ${r.status}`);
+  const data=await r.json();storage.setItem(cacheKey,JSON.stringify({saved:new Date().toISOString(),data}));
   return {data,source:"live"};
  }catch(err){
-  try{
-   const cached=JSON.parse(localStorage.getItem(cacheKey)||"null");
-   if(cached?.data)return {data:cached.data,source:"cache",saved:cached.saved,error:String(err)};
-  }catch(e){}
+  if(backupName){try{
+   const backup=await fetchJSONResilient(url.startsWith(DATA_ROOT)?"data/"+backupName:DATA_ROOT+backupName,cacheKey+"-backup",15000);
+   return {...backup,source:"hosted backup"};
+  }catch{}}
+  try{const cached=JSON.parse(storage.getItem(cacheKey)||"null");if(cached?.data)return {data:cached.data,source:"browser cache",saved:cached.saved};}catch{}
   throw err;
  }finally{clearTimeout(timer)}
 }
-
-async function loadLive(){
- $("refreshBtn").disabled=true;
- $("dataStatus").textContent="Connecting to RiftHunt…";
- $("cardsSubtitle").textContent="Loading the card catalogue and daily price feed…";
- try{
-  const [cardResult,priceResult]=await Promise.all([
-   fetchJSONResilient("https://api.rifthunt.com/bulk/cards","rb-api-cards-v1"),
-   fetchJSONResilient("https://api.rifthunt.com/bulk/prices","rb-api-prices-v1")
-  ]);
-
-  const cr=cardResult.data, pr=priceResult.data;
-  allPrints=Array.isArray(cr)?cr:(cr.data||cr.cards||[]);
-  prices=Array.isArray(pr)?pr:(pr.data||pr.prices||[]);
-
-  if(!allPrints.length)throw Error("RiftHunt returned an empty card catalogue.");
-
-  uniqueCards=canonicalizeCards(allPrints);
-  buildPriceMaps();
-  populateFilters();
-  snapshotPrices();
-
-  $("statCards").textContent=allPrints.length.toLocaleString();
-  $("statPrices").textContent=prices.length.toLocaleString();
-  $("statRefresh").textContent=new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
-
-  const usedCache=cardResult.source==="cache"||priceResult.source==="cache";
-  $("dataStatus").textContent=usedCache?"Loaded saved data; live API refresh unavailable":"Live data loaded";
-  $("cardsSubtitle").textContent=usedCache
-    ?"Catalogue loaded from your last successful visit; prices refresh when RiftHunt is reachable."
-    :"Full live catalogue with competitive and market context.";
-
-  applyFilters();
-  renderOverview();
-  renderMeta();
-  renderCompare();
-  updateWatchCount();
- }catch(e){
-  console.error(e);
-  $("dataStatus").textContent="Could not load catalogue";
-  $("statRefresh").textContent="Connection error";
-  $("cardsSubtitle").textContent="The live data source could not be reached. Try Refresh or open /health.html to test the API connection.";
-  $("tbody").innerHTML=`<tr><td colspan="11"><div class="empty">
-    <b>Unable to reach the RiftHunt API.</b><br><br>
-    This page stops waiting after 15 seconds instead of loading forever.
-    Once hosted on a normal HTTPS site, RiftHunt's browser API should load directly.
-  </div></td></tr>`;
-  $("resultCount").textContent="API unavailable";
-  toast("RiftHunt API unavailable. The page stopped retrying instead of hanging.");
-  renderMeta();
-  $("winnerList").innerHTML=winnerHTML();
-  $("winnerListMeta").innerHTML=winnerHTML();
+function applyCompetitive(data){
+ if(!data?.usage||!data?.cards)throw Error("Invalid tournament data");
+ sourceState=data;OFFICIAL_USAGE=data.usage;COMPETITIVE=data.cards;ARCHETYPES=data.archetypes||[];WINNERS=data.winners||[];
+ latestResults=data.latestResults||[];
+ KLX_2026=Object.fromEntries(Object.entries(data.cards).filter(([,v])=>v.yearDecks!=null).map(([n,v])=>[n,{decks:v.yearDecks,tournaments:v.yearTournaments,typical:v.typical,year:v.latestYear}]));
+ $("officialDeckCount").textContent=data.officialDecks??"—";
+ $("metaDecks").textContent=data.officialDecks??"—";$("metaEvents").textContent=data.officialEvents??"—";
+ $("metaArchive").textContent=data.archiveDecks??"—";$("metaArchiveEvents").textContent=data.archiveEvents?`${data.archiveEvents} published events`:"Source total unavailable";
+ for(const [zone,nameId,pctId] of [["Main","metaTopCard","metaTopCardUsage"],["Rune","metaTopRune","metaTopRuneUsage"]]){
+  const top=Object.entries(data.usage).filter(([,v])=>v.zone===zone).sort((a,b)=>b[1].pct-a[1].pct)[0];
+  $(nameId).innerHTML=top?sourceLink(cardLink(findCardByName(top[0])||{name:top[0]}),top[0]):"—";$(pctId).textContent=top?`${top[1].pct}% of decks`:"—";
  }
- $("refreshBtn").disabled=false;
+ $("officialEventCount").textContent=data.officialEvents?data.officialEvents+" published events":"Published top-deck coverage";
+ $("trackedCardCount").textContent=Object.keys(data.cards).length;
+ const src=data.sources?.klx;$("trackedCardStatus").textContent=src?`${src.cardsChecked}/${src.cardsRequested} checked successfully`:"Source check unavailable";
+ const currentYear=Math.max(0,...Object.values(KLX_2026).map(v=>v.year));
+ document.querySelectorAll("[data-klx-year]").forEach(el=>el.textContent=currentYear?`KLX ${currentYear}`:"KLX latest year");
+}
+function renderLatest(){
+ $("latestPublished").innerHTML=latestResults.map(x=>`<div class="placement"><b>${sourceLink(x.url,x.placement+" — "+x.player+" · "+x.archetype)}</b><small>${sourceLink(x.eventUrl,x.event)} · ${esc(x.date)}</small></div>`).join("")||"No recent results collected yet.";
+}
+function renderFreshness(cardResult,priceResult,tournamentResult){
+ const sources=sourceState?.sources||{};
+ const zone=sources.zone,klx=sources.klx;
+ const stale=!zone||!klx||zone.status!=="ok"||klx.status!=="ok"||Date.now()-new Date(sourceState.checkedAt).valueOf()>3*3600000;
+ $("freshness").innerHTML=`<b>${stale?"Some tournament data is stale or unavailable":"Automatic source checks enabled"}</b> · ${sourceLink("https://github.com/bing-bot-boop/riftbound-market-pulse/actions/workflows/refresh-data.yml","Update status")}<br>
+ Catalogue export: ${esc(stamp(cardResult?.data?.fetched||cardResult?.data?._checkedAt))} (${esc(cardResult?.source||"unavailable")}).
+ Price export: ${esc(stamp(priceResult?.data?.fetched))} (${esc(priceResult?.source||"unavailable")}); prices are published daily, not tick-by-tick.<br>
+ ${sourceLink("https://riftbound.zone/en/meta-stats/","Riftbound Zone")} checked: ${esc(stamp(zone?.checkedAt))} (${esc(zone?.status||"unavailable")}).
+ ${sourceLink("https://klxcards.com/decks/riftbound/","KLXCards")} check completed: ${esc(stamp(klx?.checkedAt))} (${esc(klx?.status||"unavailable")}).<br>
+ Tournament checks run about hourly, even with this page closed. This page reloads collected data every 15 minutes while visible. Refresh reloads available feeds and the latest collected results; it does not crawl websites on demand. Source check times are not event dates.`;
+}
+async function loadLive(){
+ if(isRefreshing)return;isRefreshing=true;$("refreshBtn").disabled=true;$("refreshBtn").textContent="Refreshing sources…";
+ $("dataStatus").textContent="Checking catalogue, prices and tournaments…";
+ const settled=await Promise.allSettled([
+  fetchJSONResilient("https://api.rifthunt.com/bulk/cards","rb-api-cards-v2",45000,"cards.json",24*60*60*1000),
+  fetchJSONResilient("https://api.rifthunt.com/bulk/prices","rb-api-prices-v2",45000,"prices.json"),
+  fetchJSONResilient(DATA_ROOT+"competitive.json","rb-competitive-v1",30000,"competitive.json")
+ ]);
+ const [cardResult,priceResult,tournamentResult]=settled.map(r=>r.status==="fulfilled"?r.value:null);
+ try{
+  if(tournamentResult)applyCompetitive(tournamentResult.data);
+  const cr=cardResult?.data,pr=priceResult?.data;
+  const newCards=Array.isArray(cr)?cr:(cr?.data||cr?.cards);
+  if(newCards?.length)allPrints=newCards;
+  prices=Array.isArray(pr)?pr:(pr?.data||pr?.prices||prices);
+  if(!allPrints.length)throw Error("Catalogue unavailable");
+  uniqueCards=canonicalizeCards(allPrints);buildPriceMaps();if(sourceState)applyCompetitive(sourceState);
+  const filterIds=["setFilter","typeFilter","rarityFilter","domainFilter"];
+  const selected=Object.fromEntries(filterIds.map(id=>[id,$(id).value]));populateFilters();
+  for(const id of filterIds){if([...$(id).options].some(o=>o.value===selected[id]))$(id).value=selected[id];}
+  snapshotPrices();$("statCards").textContent=allPrints.length.toLocaleString();$("statPrices").textContent=prices.length.toLocaleString();
+  $("statRefresh").textContent=new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+  $("dataStatus").textContent=settled.every(r=>r.status==="fulfilled")?"Available feeds loaded":"Some sources unavailable; saved data retained";
+  $("cardsSubtitle").textContent="Catalogue with card images, published sources and latest available prices.";
+  applyFilters(false);renderOverview();renderMeta();renderCompare();updateWatchCount();renderLatest();
+ }catch(e){
+  console.error(e);$("dataStatus").textContent="Catalogue unavailable";
+  $("tbody").innerHTML='<tr><td colspan="11"><div class="empty">Catalogue unavailable. Try Refresh or <a href="health.html">check the data connection</a>.</div></td></tr>';
+ }finally{
+  renderFreshness(cardResult,priceResult,tournamentResult);
+  isRefreshing=false;$("refreshBtn").disabled=false;$("refreshBtn").textContent="Refresh live data";
+ }
 }
 
 ["search","setFilter","typeFilter","rarityFilter","domainFilter","usageFilter","sortFilter"].forEach(id=>$(id).addEventListener("input",()=>applyFilters()));
@@ -628,15 +650,16 @@ $("nextBtn").onclick=()=>{if(page<Math.ceil(filtered.length/pageSize)){page++;re
 $("refreshBtn").onclick=loadLive;
 $("exportBtn").onclick=exportCsv;
 $("watchBtn").onclick=()=>{showView("cards");watchOnly=true;$("watchedMode").classList.add("active");$("allMode").classList.remove("active");applyFilters()};
-$("clearCompare").onclick=()=>{compare=[];localStorage.setItem("rb-compare-v1","[]");renderCompare();renderCompareTray();renderTable()};
+$("clearCompare").onclick=()=>{compare=[];storage.setItem("rb-compare-v1","[]");renderCompare();renderCompareTray();renderTable()};
 $("openCompare").onclick=()=>showView("compare");
 
 renderMeta();$("winnerList").innerHTML=winnerHTML();$("winnerListMeta").innerHTML=winnerHTML();updateWatchCount();renderCompareTray();
 loadLive();
+setInterval(()=>{if(!document.hidden)loadLive()},15*60*1000);
 </script>
 
 <footer style="max-width:1560px;margin:0 auto;padding:0 18px 24px;color:#74829f;font-size:9px;line-height:1.5">
-  Riftbound Market Pulse is an unofficial community tracker. Card data and images are provided by RiftHunt's public API;
+  Riftbound Market Pulse is an unofficial community tracker. Card data and images are provided by RiftHunt's public API; scheduled tournament checks use Riftbound Zone and KLXCards;
   competitive statistics are attributed in-app to their public sources. Riftbound and related game assets belong to their respective owners.
 </footer>
 
