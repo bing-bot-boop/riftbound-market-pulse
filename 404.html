@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Riftbound Market Pulse — Pro Tracker</title>
+<style>
+:root{
+ --bg:#080d18;--bg2:#0c1424;--panel:#10192c;--panel2:#151f35;--line:#25324c;
+ --text:#edf3ff;--muted:#91a0bd;--accent:#7f9cff;--cyan:#5bd8ef;--good:#64d9a3;
+ --warn:#f3c26b;--bad:#ff7f88;--purple:#a58cff;--shadow:0 18px 45px rgba(0,0,0,.2)
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:
+ radial-gradient(circle at 15% 0%,rgba(81,106,190,.16),transparent 30%),
+ linear-gradient(180deg,#070c16,#0b1221 50%,#08101d);color:var(--text);min-height:100vh}
+button,input,select{font:inherit}
+a{color:inherit}
+.shell{max-width:1560px;margin:auto;padding:18px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:14px}
+.brand{display:flex;gap:12px;align-items:center}.mark{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--cyan));display:grid;place-items:center;font-weight:950;color:#07101b;box-shadow:0 10px 30px rgba(104,132,255,.25)}
+h1{font-size:24px;margin:0}.subtitle{margin:3px 0 0;color:var(--muted);font-size:12px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#111c31;color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font-weight:800;font-size:12px}
+.btn:hover{border-color:#596b95}.btn.primary{background:linear-gradient(135deg,#819cff,#62d5ee);color:#08101d;border:0}.btn:disabled{opacity:.55;cursor:not-allowed}
+.source-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.source{font-size:10px;text-decoration:none;color:#c8d5f2;background:#0d1628;border:1px solid var(--line);padding:6px 9px;border-radius:999px}.source.live:before{content:"●";color:var(--good);margin-right:5px}
+.nav{display:flex;gap:7px;background:rgba(16,25,44,.92);border:1px solid var(--line);padding:7px;border-radius:13px;margin-bottom:14px;overflow:auto}
+.nav button{white-space:nowrap;border:0;background:transparent;color:var(--muted);padding:8px 12px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer}.nav button.active{background:#1b2842;color:#fff}
+.view{display:none}.view.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.stat{background:rgba(16,25,44,.96);border:1px solid var(--line);border-radius:14px;padding:13px;box-shadow:var(--shadow)}
+.stat span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.045em}.stat strong{display:block;font-size:22px;margin-top:5px}.stat small{color:var(--muted);font-size:10px}
+.cards2{display:grid;grid-template-columns:1.45fr 1fr;gap:14px}.cards3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.panel{background:rgba(16,25,44,.97);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line)}.panel-head h2{font-size:15px;margin:0}.panel-head small{color:var(--muted)}
+.body{padding:14px}
+.table-wrap{overflow:auto;max-height:70vh}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th,td{padding:10px 11px;text-align:left;border-bottom:1px solid rgba(37,50,76,.72);font-size:11px;vertical-align:middle}
+th{position:sticky;top:0;background:#111b30;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.055em;z-index:3}
+tbody tr{cursor:pointer}tbody tr:hover{background:#162139}
+.cardcell{display:flex;align-items:center;gap:9px;min-width:210px}.thumb{width:38px;height:53px;object-fit:cover;border-radius:5px;background:#080f1d;border:1px solid var(--line);flex:none}
+.cardname{font-weight:850;font-size:12px}.cardname a{text-decoration:none;border-bottom:1px dashed #65779d}.cardname a:hover{color:#aebeff}.sub{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.badge{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:4px 7px;font-size:9px;font-weight:800;white-space:nowrap}.hot{color:var(--good);background:rgba(100,217,163,.09)}.mid{color:var(--warn);background:rgba(243,194,107,.08)}.dim{color:var(--muted)}
+.score{font-weight:900;font-size:12px}.scorebar{height:5px;width:72px;background:#202a41;border-radius:999px;overflow:hidden;margin-top:4px}.scorebar i{display:block;height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan))}
+.pos{color:var(--good);font-weight:800}.neg{color:var(--bad);font-weight:800}.muted{color:var(--muted)}
+.filters{display:grid;grid-template-columns:1.5fr repeat(6,minmax(115px,.7fr));gap:7px;padding:11px;border-bottom:1px solid var(--line)}
+input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid var(--line);padding:9px 10px;border-radius:9px;font-size:11px}
+.toolbar{display:flex;justify-content:space-between;gap:8px;padding:9px 11px;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}.toolbar .left,.toolbar .right{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}.toggle button{border:0;background:#0b1426;color:var(--muted);padding:7px 9px;font-size:10px;font-weight:800;cursor:pointer}.toggle button.active{background:#263758;color:#fff}
+.pager{display:flex;justify-content:center;gap:8px;align-items:center;padding:11px}.pager span{font-size:10px;color:var(--muted)}
+.rank{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(37,50,76,.6)}.rank:last-child{border:0}.num{width:25px;height:25px;border-radius:7px;background:#1b2843;display:grid;place-items:center;font-size:10px;font-weight:900}.rank b{font-size:11px}.rank small{display:block;color:var(--muted);font-size:9px;margin-top:2px}
+.kpi{font-weight:900;font-size:11px}
+.callout{font-size:10px;line-height:1.5;color:var(--muted);padding:10px;border:1px solid var(--line);border-radius:10px;background:#0b1426}
+.hotgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.hotcard{border:1px solid var(--line);background:#0d1628;border-radius:12px;padding:10px;cursor:pointer;transition:.15s}.hotcard:hover{transform:translateY(-2px);border-color:#53678f}.hotcard .mini{display:flex;gap:8px}.hotcard img{width:45px;height:63px;object-fit:cover;border-radius:6px;background:#07101c}.hotcard b{font-size:11px}.hotcard .big{font-size:18px;font-weight:950;margin-top:8px}.hotcard small{color:var(--muted);font-size:9px}
+.legend-row{display:grid;grid-template-columns:1.35fr .55fr .55fr .55fr;gap:8px;padding:9px;border-bottom:1px solid rgba(37,50,76,.65);align-items:center}.legend-row b{font-size:11px}.legend-row span{font-size:10px}.wr{font-weight:900;color:var(--good)}
+.winner{display:grid;grid-template-columns:78px 1fr;gap:9px;padding:9px 0;border-bottom:1px solid rgba(37,50,76,.65)}.winner:last-child{border:0}.winner time{font-size:9px;color:var(--muted)}.winner b{font-size:11px}.winner small{display:block;color:var(--muted);font-size:9px;margin-top:2px}
+.star{border:0;background:transparent;color:#657391;cursor:pointer;font-size:17px;padding:0}.star.on{color:#ffd66b}
+.check{accent-color:#7f9cff}
+.empty{padding:30px;text-align:center;color:var(--muted);font-size:12px}
+.modalback{position:fixed;inset:0;background:rgba(3,7,13,.76);backdrop-filter:blur(5px);display:none;align-items:flex-start;justify-content:center;padding:30px 14px;z-index:30;overflow:auto}.modalback.open{display:flex}
+.modal{width:min(1040px,100%);background:#0e1728;border:1px solid #33415e;border-radius:16px;box-shadow:0 30px 90px rgba(0,0,0,.55);overflow:hidden}
+.modalhead{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;border-bottom:1px solid var(--line)}.close{border:0;background:transparent;color:var(--muted);font-size:25px;cursor:pointer}
+.detail{display:grid;grid-template-columns:230px 1fr;gap:18px;padding:17px}.art{width:100%;border-radius:12px;border:1px solid var(--line);background:#080f1b}.artph{aspect-ratio:5/7;display:grid;place-items:center;color:var(--muted)}
+.detail h2{margin:0 0 3px;font-size:22px}.detailmeta{color:var(--muted);font-size:10px;margin-bottom:10px}
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:10px 0}.metric{border:1px solid var(--line);background:#0a1323;padding:9px;border-radius:9px}.metric small{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.metric b{display:block;font-size:13px;margin-top:3px}
+.detailcols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.block{border:1px solid var(--line);background:#0b1425;border-radius:11px;padding:11px}.block h3{margin:0 0 8px;font-size:12px}.chips{display:flex;flex-wrap:wrap;gap:5px}.chip{font-size:9px;border:1px solid var(--line);border-radius:999px;padding:4px 6px;color:#cad6ef}
+.placement{border-left:3px solid #6177a7;padding:7px 8px;margin:6px 0;background:#0e192c;border-radius:0 8px 8px 0}.placement b{font-size:10px}.placement small{display:block;color:var(--muted);font-size:9px;margin-top:2px}
+.links{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.linkbtn{display:inline-block;text-decoration:none;border:1px solid #3a4d76;background:#111d32;padding:7px 9px;border-radius:8px;font-size:10px;font-weight:800;color:#c8d6ff}
+.comparetray{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:20;width:min(900px,calc(100% - 24px));background:#111c31;border:1px solid #344567;border-radius:13px;box-shadow:0 15px 50px rgba(0,0,0,.45);padding:9px 11px;display:none}.comparetray.show{display:flex;align-items:center;justify-content:space-between;gap:10px}.compare-items{display:flex;gap:6px;flex-wrap:wrap}.compare-chip{font-size:9px;background:#1b2944;padding:5px 7px;border-radius:7px}
+.compare-table td,.compare-table th{text-align:center}.compare-table td:first-child,.compare-table th:first-child{text-align:left}
+.toast{position:fixed;right:16px;bottom:16px;background:#17223a;border:1px solid #394967;border-radius:10px;padding:9px 12px;font-size:10px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;z-index:60}.toast.show{opacity:1;transform:translateY(0)}
+.help{cursor:help;border-bottom:1px dotted #647497}
+@media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.hotgrid{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:1.4fr repeat(3,1fr)}}
+@media(max-width:900px){.cards2,.cards3{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(3,1fr)}.detail{grid-template-columns:180px 1fr}}
+@media(max-width:640px){.shell{padding:11px}.top{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.hotgrid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr}.filters #search{grid-column:1/-1}.detail{grid-template-columns:1fr}.art{max-width:210px;margin:auto}.detailcols{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <div class="mark">RB</div>
+      <div><h1>Riftbound Market Pulse</h1><p class="subtitle">Competitive demand tracker • full card catalogue • daily TCGplayer-linked prices • tournament context</p></div>
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="exportBtn">Export CSV</button>
+      <button class="btn" id="watchBtn">Watchlist <span id="watchCount">0</span></button>
+      <button class="btn primary" id="refreshBtn">Refresh live data</button>
+    </div>
+  </header>
+
+  <div class="source-row">
+    <a class="source live" target="_blank" href="https://rifthunt.com/api/">RiftHunt API — catalogue + daily TCGplayer prices</a>
+    <a class="source" target="_blank" href="https://riftbound.zone/en/meta-stats/">Riftbound Zone — official RQ top-deck meta</a>
+    <a class="source" target="_blank" href="https://klxcards.com/decks/riftbound/">KLXCards — published tournament decklists</a>
+    <span class="source">Meta snapshot: Sep 27, 2026</span>
+  </div>
+
+  <nav class="nav">
+    <button class="active" data-view="overview">Overview</button>
+    <button data-view="cards">All Cards</button>
+    <button data-view="meta">Meta & Top Decks</button>
+    <button data-view="compare">Compare</button>
+    <button data-view="method">Methodology</button>
+  </nav>
+
+  <main>
+    <section id="view-overview" class="view active">
+      <div class="stats">
+        <div class="stat"><span>Card printings</span><strong id="statCards">—</strong><small>Live catalogue</small></div>
+        <div class="stat"><span>Priced printings</span><strong id="statPrices">—</strong><small>Daily TCGplayer feed</small></div>
+        <div class="stat"><span>Official top decks</span><strong>391</strong><small>11 Regional Qualifiers</small></div>
+        <div class="stat"><span>KLX 2026 lists</span><strong>460</strong><small>18 tournaments</small></div>
+        <div class="stat"><span>Last refresh</span><strong id="statRefresh" style="font-size:15px">—</strong><small id="dataStatus">Loading…</small></div>
+      </div>
+
+      <section class="panel" style="margin-bottom:14px">
+        <div class="panel-head"><div><h2>🔥 Competitive Demand Leaders</h2><small>Calculated from official top-deck usage + KLX published-list frequency + typical copies</small></div><button class="btn" data-go="cards">Explore all cards</button></div>
+        <div class="body"><div id="hotGrid" class="hotgrid"></div></div>
+      </section>
+
+      <div class="cards2">
+        <section class="panel">
+          <div class="panel-head"><div><h2>Most Played Cards</h2><small>Official Regional Qualifier top-deck share</small></div><span class="badge hot">Live prices when loaded</span></div>
+          <div id="overviewRanks" class="body"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><div><h2>Recent Event Winners</h2><small>Official top-deck event snapshot</small></div></div>
+          <div id="winnerList" class="body"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="view-cards" class="view">
+      <section class="panel">
+        <div class="panel-head"><div><h2>All Riftbound Cards</h2><small id="cardsSubtitle">Full catalogue with competitive and market context</small></div><span id="resultCount" class="badge dim">—</span></div>
+        <div class="toolbar">
+          <div class="left">
+            <div class="toggle"><button id="uniqueMode" class="active">Unique cards</button><button id="printsMode">All printings</button></div>
+            <div class="toggle"><button id="allMode" class="active">All</button><button id="watchedMode">Watchlist</button></div>
+          </div>
+          <div class="right"><span class="muted" style="font-size:9px">★ Watch • ☑ Compare • click row for details</span></div>
+        </div>
+        <div class="filters">
+          <input id="search" placeholder="Search card, set or collector number…">
+          <select id="setFilter"><option value="all">All sets</option></select>
+          <select id="typeFilter"><option value="all">All types</option></select>
+          <select id="rarityFilter"><option value="all">All rarities</option></select>
+          <select id="domainFilter"><option value="all">All domains</option></select>
+          <select id="usageFilter">
+            <option value="all">All usage</option><option value="published">Published usage only</option>
+            <option value="10">10%+ usage</option><option value="20">20%+ usage</option>
+          </select>
+          <select id="sortFilter">
+            <option value="demand">Sort: Demand score</option><option value="usage">Sort: Official usage</option>
+            <option value="klx">Sort: KLX 2026 decks</option><option value="price">Sort: Market price</option>
+            <option value="change">Sort: Price change</option><option value="name">Sort: Name</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th></th><th>Card</th><th>Type / Domain</th><th>Official usage</th><th>KLX 2026</th><th>Avg copies</th>
+              <th><span class="help" title="Demand score blends official top-deck share, KLX 2026 published deck frequency and typical copies. It is not TCGplayer units sold.">Demand</span></th>
+              <th>Normal</th><th>Foil</th><th>Saved Δ</th><th>TCGplayer</th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="pager"><button id="prevBtn" class="btn">← Previous</button><span id="pageInfo">—</span><button id="nextBtn" class="btn">Next →</button></div>
+      </section>
+    </section>
+
+    <section id="view-meta" class="view">
+      <div class="stats">
+        <div class="stat"><span>Official sample</span><strong>391</strong><small>top decks</small></div>
+        <div class="stat"><span>Events</span><strong>11</strong><small>Regional Qualifiers</small></div>
+        <div class="stat"><span>Top main-deck card</span><strong style="font-size:16px">Defy</strong><small>33.2% of decks</small></div>
+        <div class="stat"><span>Top rune</span><strong style="font-size:16px">Chaos Rune</strong><small>35.8% of decks</small></div>
+        <div class="stat"><span>KLX archive</span><strong>641</strong><small>published lists / 32 events</small></div>
+      </div>
+      <div class="cards2">
+        <section class="panel">
+          <div class="panel-head"><div><h2>Archetype Performance</h2><small>Win rates among Riot-awarded top-deck pilots; not the full field</small></div></div>
+          <div class="table-wrap" style="max-height:620px"><div id="archetypeList"></div></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><div><h2>Winning Decks</h2><small>Regional Qualifier winners in the official snapshot</small></div></div>
+          <div id="winnerListMeta" class="body"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="view-compare" class="view">
+      <section class="panel">
+        <div class="panel-head"><div><h2>Card Comparison</h2><small>Choose up to 4 cards using the checkboxes in All Cards</small></div><button class="btn" id="clearCompare">Clear comparison</button></div>
+        <div class="table-wrap"><table class="compare-table" id="compareTable"></table></div>
+        <div id="compareEmpty" class="empty">No cards selected yet.</div>
+      </section>
+    </section>
+
+    <section id="view-method" class="view">
+      <div class="cards3">
+        <section class="panel"><div class="body"><h3 style="margin-top:0">Demand score</h3><div class="callout"><b>55%</b> official RQ top-deck share, <b>30%</b> KLX 2026 published-list frequency, and <b>15%</b> typical/average copies. Missing components contribute 0. The score is a discovery aid, not a claim about TCGplayer sales volume.</div></div></section>
+        <section class="panel"><div class="body"><h3 style="margin-top:0">Prices</h3><div class="callout">RiftHunt's free API supplies the full catalogue and a daily TCGplayer price export with separate normal/foil finishes and exact TCGplayer product links. This page stores local snapshots in your browser so it can show changes after you use it over time.</div></div></section>
+        <section class="panel"><div class="body"><h3 style="margin-top:0">Tournament data</h3><div class="callout">Official usage comes from 391 published top decks across 11 Regional Qualifiers. KLXCards provides a separate archive of published tournament decklists. Coverage is public-source coverage, not every deck ever played.</div></div></section>
+      </div>
+      <section class="panel" style="margin-top:14px"><div class="body">
+        <h3 style="margin-top:0">Important interpretation</h3>
+        <div class="callout">A card marked “not published” is <b>not</b> assumed to have 0% play. Riftbound Zone publishes exact percentages for its most-played lists and selected categories; anything outside that list is left unknown. Likewise, exact marketplace-wide TCGplayer units sold are not exposed by the free data sources used here, so this tracker sends you to the exact TCGplayer product page to verify the sales/history information TCGplayer shows.</div>
+      </div></section>
+    </section>
+  </main>
+</div>
+
+<div id="modalBack" class="modalback">
+  <div class="modal">
+    <div class="modalhead"><b>Card Intelligence</b><button id="modalClose" class="close">×</button></div>
+    <div id="detail" class="detail"></div>
+  </div>
+</div>
+
+<div id="compareTray" class="comparetray"><div class="compare-items" id="compareItems"></div><button class="btn primary" id="openCompare">Compare cards</button></div>
+<div id="toast" class="toast"></div>
+
+<script>
+const OFFICIAL_USAGE = {"Defy": {"pct": 33.2, "decks": 130, "avg": 2.8, "zone": "Main"}, "Discipline": {"pct": 32.0, "decks": 125, "avg": 2.9, "zone": "Main"}, "Stacked Deck": {"pct": 27.9, "decks": 109, "avg": 2.9, "zone": "Main"}, "Punch First": {"pct": 24.3, "decks": 95, "avg": 2.4, "zone": "Main"}, "Hidden Blade": {"pct": 23.3, "decks": 91, "avg": 2.4, "zone": "Main"}, "Noxus Hopeful": {"pct": 22.5, "decks": 88, "avg": 2.8, "zone": "Main"}, "Sabotage": {"pct": 22.5, "decks": 88, "avg": 2.1, "zone": "Main"}, "Stupefy": {"pct": 22.0, "decks": 86, "avg": 2.8, "zone": "Main"}, "Charm": {"pct": 22.0, "decks": 86, "avg": 2.0, "zone": "Main"}, "Thousand-Tailed Watcher": {"pct": 21.2, "decks": 83, "avg": 2.1, "zone": "Main"}, "Tideturner": {"pct": 20.5, "decks": 80, "avg": 2.5, "zone": "Main"}, "Ride The Wind": {"pct": 20.2, "decks": 79, "avg": 2.0, "zone": "Main"}, "Gust": {"pct": 19.9, "decks": 78, "avg": 2.0, "zone": "Main"}, "Falling Star": {"pct": 18.9, "decks": 74, "avg": 2.1, "zone": "Main"}, "Ferrous Forerunner": {"pct": 18.7, "decks": 73, "avg": 2.2, "zone": "Main"}, "Star-Crossed": {"pct": 18.2, "decks": 71, "avg": 1.9, "zone": "Main"}, "Kai'Sa, Survivor": {"pct": 17.6, "decks": 69, "avg": 2.8, "zone": "Main"}, "Challenge": {"pct": 17.1, "decks": 67, "avg": 2.2, "zone": "Main"}, "Zhonya's Hourglass": {"pct": 16.4, "decks": 64, "avg": 2.1, "zone": "Main"}, "Traveling Merchant": {"pct": 16.1, "decks": 63, "avg": 2.8, "zone": "Main"}, "Rebuke": {"pct": 16.1, "decks": 63, "avg": 1.6, "zone": "Main"}, "Hard Bargain": {"pct": 16.1, "decks": 63, "avg": 1.3, "zone": "Main"}, "En Garde": {"pct": 15.9, "decks": 62, "avg": 2.4, "zone": "Main"}, "Vex, Apathetic": {"pct": 14.8, "decks": 58, "avg": 2.0, "zone": "Main"}, "First Mate": {"pct": 14.6, "decks": 57, "avg": 2.7, "zone": "Main"}, "Singularity": {"pct": 14.6, "decks": 57, "avg": 1.8, "zone": "Main"}, "Cleave": {"pct": 14.3, "decks": 56, "avg": 2.1, "zone": "Main"}, "Fizz, Trickster": {"pct": 14.3, "decks": 56, "avg": 2.0, "zone": "Main"}, "Back Off": {"pct": 14.1, "decks": 55, "avg": 1.8, "zone": "Main"}, "Dazzling Aurora": {"pct": 13.6, "decks": 53, "avg": 3.0, "zone": "Main"}, "Lonely Poro": {"pct": 13.6, "decks": 53, "avg": 2.8, "zone": "Main"}, "Scuttle Crab": {"pct": 13.6, "decks": 53, "avg": 2.5, "zone": "Main"}, "Time Warp": {"pct": 13.0, "decks": 51, "avg": 1.7, "zone": "Main"}, "Catalyst of Aeons": {"pct": 12.8, "decks": 50, "avg": 3.0, "zone": "Main"}, "Not So Fast": {"pct": 12.8, "decks": 50, "avg": 1.4, "zone": "Main"}, "Mobilize": {"pct": 12.5, "decks": 49, "avg": 3.0, "zone": "Main"}, "Cull the Weak": {"pct": 12.5, "decks": 49, "avg": 2.4, "zone": "Main"}, "Switcheroo": {"pct": 12.3, "decks": 48, "avg": 1.8, "zone": "Main"}, "Plundering Poro": {"pct": 11.5, "decks": 45, "avg": 2.7, "zone": "Main"}, "Bellows Breath": {"pct": 11.3, "decks": 44, "avg": 2.2, "zone": "Main"}, "Chaos Rune": {"pct": 35.8, "decks": 140, "avg": 6.3, "zone": "Rune"}, "Body Rune": {"pct": 33.8, "decks": 132, "avg": 6.6, "zone": "Rune"}, "Order Rune": {"pct": 33.2, "decks": 130, "avg": 5.6, "zone": "Rune"}, "Calm Rune": {"pct": 33.0, "decks": 129, "avg": 6.1, "zone": "Rune"}, "Fury Rune": {"pct": 32.0, "decks": 125, "avg": 5.8, "zone": "Rune"}, "Mind Rune": {"pct": 31.2, "decks": 122, "avg": 5.7, "zone": "Rune"}, "Monastery of Hirana": {"pct": 0.3, "decks": 1, "avg": 1.0, "zone": "Rune"}, "Sunken Temple": {"pct": 13.6, "decks": 53, "avg": null, "zone": "Battlefield"}, "Amateur Recital": {"pct": 0.3, "decks": 1, "avg": 1.0, "zone": "Rune"}, "Aspirant's Climb": {"pct": 16.4, "decks": 64, "avg": null, "zone": "Battlefield"}, "Zaun Warrens": {"pct": 15.9, "decks": 62, "avg": null, "zone": "Battlefield"}, "The Arena's Greatest": {"pct": 14.6, "decks": 57, "avg": null, "zone": "Battlefield"}, "Seat of Power": {"pct": 13.8, "decks": 54, "avg": null, "zone": "Battlefield"}, "Sigil of the Storm": {"pct": 13.0, "decks": 51, "avg": null, "zone": "Battlefield"}, "Targon's Peak": {"pct": 12.3, "decks": 48, "avg": null, "zone": "Battlefield"}, "Trifarian War Camp": {"pct": 10.7, "decks": 42, "avg": null, "zone": "Battlefield"}, "Vilemaw's Lair": {"pct": 10.5, "decks": 41, "avg": null, "zone": "Battlefield"}, "Star Spring": {"pct": 10.0, "decks": 39, "avg": null, "zone": "Battlefield"}, "Master Yi, Tempered": {"pct": 4.1, "decks": 16, "avg": null, "zone": "Champion"}, "Irelia, Fervent": {"pct": 3.8, "decks": 15, "avg": null, "zone": "Champion"}, "Draven, Showboat": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Champion"}, "Azir, Sovereign": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Champion"}, "Diana, Lunari": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Champion"}, "Annie, Stubborn": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Champion"}, "Ezreal, Prodigy": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Champion"}, "Lucian, Merciless": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Champion"}, "Jax, Unmatched": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Champion"}, "Sivir, Mercenary": {"pct": 2.3, "decks": 9, "avg": null, "zone": "Champion"}, "Rek'Sai, Breacher": {"pct": 2.3, "decks": 9, "avg": null, "zone": "Champion"}, "Renata Glasc, Mastermind": {"pct": 2.3, "decks": 9, "avg": null, "zone": "Champion"}, "Rumble, Hotheaded": {"pct": 2.3, "decks": 9, "avg": null, "zone": "Champion"}, "Volibear, Furious": {"pct": 2.0, "decks": 8, "avg": null, "zone": "Champion"}, "Miss Fortune, Captain": {"pct": 2.0, "decks": 8, "avg": null, "zone": "Champion"}, "Draven, Glorious Executioner": {"pct": 4.1, "decks": 16, "avg": null, "zone": "Legend", "top8": 9}, "Irelia, Blade Dancer": {"pct": 3.8, "decks": 15, "avg": null, "zone": "Legend", "top8": 11}, "Diana, Scorn of the Moon": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Legend", "top8": 8}, "Azir, Emperor of the Sands": {"pct": 2.8, "decks": 11, "avg": null, "zone": "Legend", "top8": 6}, "Master Yi, Wuju Bladesman": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 7}, "Sivir, Battle Mistress": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 2}, "Fiora, Grand Duelist": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 1}, "Jax, Grandmaster At Arms": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 1}, "Rek'Sai, Void Burrower": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 1}, "Renata Glasc, Chem-Baroness": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 0}, "Lucian, Purifier": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 0}, "Rumble, Mechanized Menace": {"pct": 2.6, "decks": 10, "avg": null, "zone": "Legend", "top8": 0}, "Kennen, Heart of the Tempest": {"pct": 2.0, "decks": 8, "avg": null, "zone": "Legend", "top8": 7}, "Annie, Dark Child": {"pct": 1.8, "decks": 7, "avg": null, "zone": "Legend", "top8": 4}};
+const KLX_2026 = {"Defy": {"decks": 153, "tournaments": 18, "typical": 3}, "Stacked Deck": {"decks": 149, "tournaments": 17, "typical": 3}, "Discipline": {"decks": 148, "tournaments": 18, "typical": 3}, "Punch First": {"decks": 112, "tournaments": 17, "typical": 3}, "Charm": {"decks": 111, "tournaments": 18, "typical": 2}, "Stupefy": {"decks": 109, "tournaments": 16, "typical": 3}, "Noxus Hopeful": {"decks": 104, "tournaments": 16, "typical": 3}, "Thousand-Tailed Watcher": {"decks": 103, "tournaments": 16, "typical": 2}, "Hidden Blade": {"decks": 100, "tournaments": 16, "typical": 3}, "Ride The Wind": {"decks": 95, "tournaments": 17, "typical": 2}, "Sabotage": {"decks": 95, "tournaments": 17, "typical": 2}, "Tideturner": {"decks": 93, "tournaments": 18, "typical": 3}, "Hard Bargain": {"decks": 92, "tournaments": 18, "typical": 1}, "Gust": {"decks": 91, "tournaments": 16, "typical": 2}, "Star-Crossed": {"decks": 91, "tournaments": 12, "typical": 2}, "Ferrous Forerunner": {"decks": 87, "tournaments": 16, "typical": 2}, "Kai'Sa, Survivor": {"decks": 86, "tournaments": 16, "typical": 3}, "Vex, Apathetic": {"decks": 85, "tournaments": 12, "typical": 2}, "Falling Star": {"decks": 83, "tournaments": 16, "typical": 2}, "Fizz, Trickster": {"decks": 83, "tournaments": 18, "typical": 2}, "Rebuke": {"decks": 83, "tournaments": 17, "typical": 2}, "En Garde": {"decks": 80, "tournaments": 18, "typical": 3}, "Zhonya's Hourglass": {"decks": 74, "tournaments": 18, "typical": 2}, "Challenge": {"decks": 72, "tournaments": 16, "typical": 2}};
+const COMPETITIVE = {"Defy": {"allDecks": 169, "allTournaments": 28, "best": "1st", "first": "Nov 22, 2025", "latest": "Aug 22, 2026", "typical": 3, "archetypes": [["Master Yi, Wuju Bladesman", 44], ["Irelia, Blade Dancer", 26], ["Emperor of the Sands", 11], ["Yasuo, Unforgiven", 11], ["Ahri, Nine-Tailed Fox", 10]], "placements": [["1st", "MICE TheManLand", "Ornn, Fire Below the Mountain", "Regional Qualifier Barcelona", "Aug 22, 2026", 3], ["1st", "Factor", "Master Yi, Wuju Bladesman", "Regional Qualifier Hartford", "Jun 20, 2026", 3], ["1st", "Squirtle", "Emperor of the Sands", "Regional Qualifier Utrecht", "Jun 13, 2026", 3], ["1st", "Vicer", "Master Yi, Wuju Bladesman", "Runes and Rift Weekly 15", "May 20, 2026", 3], ["1st", "Rico1997", "Irelia, Blade Dancer", "Regional Qualifiers Sydney", "May 16, 2026", 3]], "alongside": [["Calm Rune", 169], ["Discipline", 165], ["Charm", 142], ["Zhonya's Hourglass", 101], ["En Garde", 100], ["Not So Fast", 86]]}, "Stacked Deck": {"allDecks": 203, "allTournaments": 30, "best": "1st", "first": "Nov 8, 2025", "latest": "Sep 4, 2026", "typical": 3, "archetypes": [["Annie, Dark Child", 37], ["Draven, Glorious Executioner", 29], ["Miss Fortune, Bounty Hunter", 25], ["Ezreal, Prodigal Explorer", 17], ["Teemo, Swift Scout", 16]], "placements": [["1st", "Joshua Chan", "Ezreal, Prodigal Explorer", "Haven Online Challenger Series #2", "Aug 2, 2026", 3], ["1st", "Cameren Kawamoto", "Ezreal, Prodigal Explorer", "Pittsburgh Showdown", "Jul 11, 2026", 3], ["1st", "fafafgvcwrqrebcg", "Ezreal, Prodigal Explorer", "Pro-Play Summit Dallas", "Jul 4, 2026", 3], ["1st", "CTG Alanzq", "Diana, Scorn of the Moon", "Regional Qualifier Vancouver", "May 30, 2026", 3], ["1st", "Rico1997", "Irelia, Blade Dancer", "Regional Qualifiers Sydney", "May 16, 2026", 2]], "alongside": [["Chaos Rune", 203], ["Gust", 132], ["Rebuke", 129], ["Ride the Wind", 115], ["Hard Bargain", 105], ["Traveling Merchant", 102]]}};
+const ARCHETYPES = [["Azir, Emperor of the Sands", 85.9, 106, 8], ["Kennen, Heart of the Tempest", 84.3, 99, 7], ["Master Yi, Wuju Bladesman", 82.8, 134, 10], ["Rengar, Pridestalker", 82.8, 64, 5], ["Diana, Scorn of the Moon", 82.7, 136, 10], ["Irelia, Blade Dancer", 82.1, 156, 12], ["Annie, Dark Child", 80.7, 93, 7], ["Ezreal, Prodigal Explorer", 80.2, 101, 8], ["Draven, Glorious Executioner", 80.2, 189, 14], ["Viktor, Herald of the Arcane", 78.7, 87, 7], ["Sivir, Battle Mistress", 78.7, 101, 8], ["LeBlanc, Deceiver", 78.4, 74, 6], ["Rek'Sai, Void Burrower", 77.6, 107, 9], ["Vex, Gloomist", 76.6, 77, 6], ["Fiora, Grand Duelist", 75.7, 111, 9], ["Kha'Zix, Voidreaver", 75.3, 77, 6], ["Sett, The Boss", 74.7, 89, 7], ["Kai'Sa, Daughter of the Void", 74.7, 85, 7], ["Lux, Lady of Luminosity", 74.0, 73, 6], ["Teemo, Swift Scout", 73.5, 81, 7], ["Lucian, Purifier", 72.7, 110, 9], ["Darius, Hand of Noxus", 72.7, 86, 7], ["Lillia, Bashful Bloom", 72.3, 74, 6], ["Ornn, Fire Below the Mountain", 71.3, 108, 9], ["Jhin, Virtuoso", 71.2, 66, 6], ["Miss Fortune, Bounty Hunter", 70.0, 85, 7], ["Pyke, Bloodharbor Ripper", 69.6, 69, 6], ["Volibear, Relentless Storm", 68.4, 79, 7], ["Ahri, Nine-Tailed Fox", 68.3, 82, 7], ["Poppy, Keeper of the Hammer", 66.7, 69, 6], ["Jinx, Loose Cannon", 66.1, 59, 6], ["Rumble, Mechanized Menace", 64.3, 77, 9], ["Jax, Grandmaster At Arms", 64.0, 89, 8], ["Master Yi, Wuju Master", 63.5, 63, 6], ["Lee Sin, Blind Monk", 63.1, 80, 7], ["Yasuo, Unforgiven", 62.9, 85, 7], ["Leona, Radiant Dawn", 61.5, 65, 7], ["Vi, Piltover Enforcer", 60.8, 65, 6], ["Renata Glasc, Chem-Baroness", 60.4, 77, 9], ["Garen, Might of Demacia", 59.8, 56, 7], ["Ivern, Green Father", 56.4, 55, 5]];
+const WINNERS = [["Angeles", "Sep 27, 2026", "DSG Prismaticism", "Rengar, Pridestalker", "Rengar, Trophy Hunter"], ["Singapore", "Sep 6, 2026", "Gorica", "Akali, Rogue Assassin", "Akali, Deadly Weapon"], ["Barcelona", "Aug 23, 2026", "MICE TheManland", "Ornn, Fire Below the Mountain", "Ornn, Blacksmith"], ["Hartford", "Jun 21, 2026", "Factor", "Master Yi, Wuju Bladesman", "Master Yi, Tempered"], ["Utrecht", "Jun 14, 2026", "Squirtle", "Azir, Emperor of the Sands", "Azir, Sovereign"], ["Vancouver", "May 31, 2026", "Alanzq", "Diana, Scorn of the Moon", "Diana, Lunari"], ["Sydney", "May 17, 2026", "EDG Rico1997", "Irelia, Blade Dancer", "Irelia, Fervent"], ["Atlanta", "Apr 26, 2026", "Prismaticismism", "Annie, Dark Child", "Annie, Stubborn"], ["Lille", "Apr 19, 2026", "Squirtle", "Azir, Emperor of the Sands", "Azir, Sovereign"], ["Vegas", "Mar 1, 2026", "SAMDSHERMAN", "Draven, Glorious Executioner", "Draven, Vanquisher"]];
+
+let allPrints=[], prices=[], uniqueCards=[], filtered=[], displayMode="unique", watchOnly=false, page=1;
+const pageSize=100;
+const $=id=>document.getElementById(id);
+const watch=new Set(JSON.parse(localStorage.getItem("rb-watch-v1")||"[]"));
+let compare=JSON.parse(localStorage.getItem("rb-compare-v1")||"[]").slice(0,4);
+let priceMap=new Map(), priceBySlug=new Map(), priceByIdCollector=new Map();
+
+function canon(s){return String(s||"").trim()}
+function nameOf(c){return canon(c.oracle_name||c.name||c.printed_name)}
+function norm(s){return canon(s).toLowerCase()}
+function arr(v){return Array.isArray(v)?v:(v?[v]:[])}
+function typeOf(c){return canon(c.type||c.card_type||c.type_line||"Unknown")}
+function setCode(c){return canon(c.set_code||c.set||c.expansion_code||"")}
+function setName(c){return canon(c.set_name||c.expansion_name||setCode(c)||"Unknown set")}
+function rarityOf(c){return canon(c.rarity||"Unknown")}
+function domainsOf(c){return arr(c.domains||c.domain).map(x=>typeof x==="string"?x:(x?.name||"")).filter(Boolean)}
+function collectorOf(c){return canon(c.collector_number||c.collector||c.number||"")}
+function slugOf(c){return canon(c.slug||c.product_slug||"")}
+function rbIdOf(c){return canon(c.riftbound_id||c.riftboundId||c.card_id||"")}
+function cardKey(c){return [rbIdOf(c),collectorOf(c),slugOf(c)].join("|")}
+function cardImage(c){
+ const i=c?.image_uris||c?.images||{};
+ return c?.image_url||c?.imageUrl||i?.large||i?.normal||i?.png||i?.small||c?.image||null;
+}
+function purchaseCard(c){
+ return c?.purchase_uris?.tcgplayer||c?.purchaseUri||null;
+}
+function tcgFallback(name){return "https://www.tcgplayer.com/search/riftbound/product?productLineName=riftbound&q="+encodeURIComponent(name)+"&view=grid"}
+function money(v){return v==null||!Number.isFinite(Number(v))?"—":"$"+Number(v).toFixed(2)}
+function priceValue(o){
+ if(o==null)return null;if(typeof o==="number")return o;
+ return o.market??o.marketPrice??o.price??o.mid??null;
+}
+function buildPriceMaps(){
+ priceMap=new Map();priceBySlug=new Map();priceByIdCollector=new Map();
+ for(const p of prices){
+   const rid=canon(p.riftboundId||p.riftbound_id), col=canon(p.collector||p.collector_number), sl=canon(p.slug);
+   priceMap.set([rid,col,sl].join("|"),p);
+   if(sl)priceBySlug.set(sl,p);
+   if(rid||col)priceByIdCollector.set([rid,col].join("|"),p);
+ }
+}
+function priceRow(c){
+ const exact=priceMap.get(cardKey(c));
+ const slug=slugOf(c)?priceBySlug.get(slugOf(c)):null;
+ const idcol=priceByIdCollector.get([rbIdOf(c),collectorOf(c)].join("|"));
+ return exact||slug||idcol||null;
+}
+function cardPrices(c){
+ const p=priceRow(c), f=p?.finishes||p?.prices||{};
+ return {normal:priceValue(f.normal??f.nonfoil??f.standard),foil:priceValue(f.foil),url:p?.purchaseUri||p?.purchase_uri||purchaseCard(c)||tcgFallback(nameOf(c))};
+}
+function usageOf(c){return OFFICIAL_USAGE[nameOf(c)]||null}
+function klxOf(c){return KLX_2026[nameOf(c)]||null}
+function demandScore(c){
+ const u=usageOf(c),k=klxOf(c);
+ const uN=Math.min(1,(u?.pct||0)/35.8);
+ const kN=Math.min(1,(k?.decks||0)/153);
+ const copies=(u?.avg??k?.typical??0);
+ const cN=Math.min(1,copies/3);
+ return Math.round((uN*.55+kN*.30+cN*.15)*100);
+}
+function safeId(s){return btoa(unescape(encodeURIComponent(s))).replaceAll("=","").replaceAll("+","-").replaceAll("/","_")}
+function isWatched(c){return watch.has(nameOf(c))}
+function toggleWatch(name){
+ if(watch.has(name))watch.delete(name);else watch.add(name);
+ localStorage.setItem("rb-watch-v1",JSON.stringify([...watch]));
+ updateWatchCount();applyFilters();toast(watch.has(name)?"Added to watchlist":"Removed from watchlist");
+}
+function updateWatchCount(){$("watchCount").textContent=watch.size}
+function showView(name){
+ document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));
+ $("view-"+name).classList.add("active");
+ if(name==="compare")renderCompare();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>showView(b.dataset.view));
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>showView(b.dataset.go));
+
+function canonicalizeCards(cards){
+ const groups=new Map();
+ for(const c of cards){
+   const n=nameOf(c);if(!n)continue;
+   if(!groups.has(n))groups.set(n,[]);
+   groups.get(n).push(c);
+ }
+ const result=[];
+ for(const [n,g] of groups){
+   g.sort((a,b)=>{
+     const aMetal=/metal|showcase|alt|promo/i.test(slugOf(a)+" "+collectorOf(a)+" "+canon(a.variant));
+     const bMetal=/metal|showcase|alt|promo/i.test(slugOf(b)+" "+collectorOf(b)+" "+canon(b.variant));
+     return Number(aMetal)-Number(bMetal);
+   });
+   result.push(g[0]);
+ }
+ return result;
+}
+function populateFilters(){
+ const sets=[...new Map(allPrints.map(c=>[setCode(c),setName(c)]).filter(x=>x[0])).entries()].sort((a,b)=>a[1].localeCompare(b[1]));
+ $("setFilter").innerHTML='<option value="all">All sets</option>'+sets.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join("");
+ const types=[...new Set(allPrints.map(typeOf).filter(Boolean))].sort();
+ $("typeFilter").innerHTML='<option value="all">All types</option>'+types.map(x=>`<option>${esc(x)}</option>`).join("");
+ const rar=[...new Set(allPrints.map(rarityOf).filter(Boolean))].sort();
+ $("rarityFilter").innerHTML='<option value="all">All rarities</option>'+rar.map(x=>`<option>${esc(x)}</option>`).join("");
+ const dom=[...new Set(allPrints.flatMap(domainsOf))].sort();
+ $("domainFilter").innerHTML='<option value="all">All domains</option>'+dom.map(x=>`<option>${esc(x)}</option>`).join("");
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+
+function snapshotKey(){return "rb-price-history-v2"}
+function snapshotPrices(){
+ try{
+   const hist=JSON.parse(localStorage.getItem(snapshotKey())||"[]");
+   const today=new Date().toISOString().slice(0,10);
+   if(hist.some(x=>x.date===today))return;
+   const data={};
+   for(const c of uniqueCards){
+     const p=cardPrices(c).normal;
+     if(p!=null)data[nameOf(c)]=Number(p);
+   }
+   hist.push({date:today,data});
+   while(hist.length>60)hist.shift();
+   localStorage.setItem(snapshotKey(),JSON.stringify(hist));
+ }catch(e){}
+}
+function savedChange(c){
+ try{
+   const hist=JSON.parse(localStorage.getItem(snapshotKey())||"[]");
+   if(hist.length<2)return null;
+   const now=cardPrices(c).normal, prev=hist[hist.length-2]?.data?.[nameOf(c)];
+   if(now==null||prev==null||prev===0)return null;
+   return (now-prev)/prev*100;
+ }catch(e){return null}
+}
+function priceHistory(name){
+ try{
+   return JSON.parse(localStorage.getItem(snapshotKey())||"[]")
+    .map(x=>({date:x.date,price:x.data?.[name]})).filter(x=>x.price!=null);
+ }catch(e){return []}
+}
+
+function applyFilters(reset=true){
+ let base=displayMode==="unique"?uniqueCards:allPrints;
+ const q=norm($("search").value),sf=$("setFilter").value,tf=$("typeFilter").value,rf=$("rarityFilter").value,df=$("domainFilter").value,uf=$("usageFilter").value;
+ filtered=base.filter(c=>{
+   const u=usageOf(c);
+   if(watchOnly&&!isWatched(c))return false;
+   if(q&&!norm([nameOf(c),setName(c),collectorOf(c),typeOf(c),domainsOf(c).join(" ")].join(" ")).includes(q))return false;
+   if(sf!=="all"&&setCode(c)!==sf)return false;
+   if(tf!=="all"&&typeOf(c)!==tf)return false;
+   if(rf!=="all"&&rarityOf(c)!==rf)return false;
+   if(df!=="all"&&!domainsOf(c).includes(df))return false;
+   if(uf==="published"&&!u)return false;
+   if(uf==="10"&&(!u||u.pct<10))return false;
+   if(uf==="20"&&(!u||u.pct<20))return false;
+   return true;
+ });
+ const sort=$("sortFilter").value;
+ filtered.sort((a,b)=>{
+   if(sort==="name")return nameOf(a).localeCompare(nameOf(b));
+   if(sort==="usage")return (usageOf(b)?.pct??-1)-(usageOf(a)?.pct??-1);
+   if(sort==="klx")return (klxOf(b)?.decks??-1)-(klxOf(a)?.decks??-1);
+   if(sort==="price")return (cardPrices(b).normal??-1)-(cardPrices(a).normal??-1);
+   if(sort==="change")return (savedChange(b)??-999)-(savedChange(a)??-999);
+   return demandScore(b)-demandScore(a);
+ });
+ if(reset)page=1;
+ renderTable();
+}
+function renderTable(){
+ const pages=Math.max(1,Math.ceil(filtered.length/pageSize));if(page>pages)page=pages;
+ const shown=filtered.slice((page-1)*pageSize,page*pageSize);
+ $("resultCount").textContent=filtered.length.toLocaleString()+" results";
+ $("pageInfo").textContent=`Page ${page} of ${pages}`;
+ $("tbody").innerHTML=shown.map(c=>{
+   const n=nameOf(c),u=usageOf(c),k=klxOf(c),p=cardPrices(c),d=demandScore(c),chg=savedChange(c),img=cardImage(c);
+   const uid=safeId(n+"|"+collectorOf(c)+"|"+slugOf(c));
+   const checked=compare.includes(n)?"checked":"";
+   return `<tr data-uid="${uid}">
+    <td onclick="event.stopPropagation()">
+      <button class="star ${isWatched(c)?"on":""}" data-watch="${esc(n)}" title="Watch this card">★</button>
+      <input class="check comparebox" type="checkbox" ${checked} data-compare="${esc(n)}" title="Compare this card">
+    </td>
+    <td><div class="cardcell">${img?`<img class="thumb" src="${esc(img)}" loading="lazy" onerror="this.style.visibility='hidden'">`:"<div class='thumb'></div>"}<div><span class="cardname"><a href="${esc(p.url)}" target="_blank" onclick="event.stopPropagation()">${esc(n)}</a></span><span class="sub">${esc(setName(c))} • ${esc(collectorOf(c))} • ${esc(rarityOf(c))}</span></div></div></td>
+    <td>${esc(typeOf(c))}<span class="sub">${esc(domainsOf(c).join(" · ")||"—")}</span></td>
+    <td>${u?`<span class="badge ${u.pct>=20?"hot":"mid"}">${u.pct.toFixed(1)}%</span><span class="sub">${u.decks} top decks · ${u.zone}</span>`:`<span class="badge dim">Not published</span>`}</td>
+    <td>${k?`<b>${k.decks}</b><span class="sub">${k.tournaments} tournaments</span>`:"—"}</td>
+    <td>${u?.avg??k?.typical??"—"}</td>
+    <td><span class="score">${d}</span><div class="scorebar"><i style="width:${d}%"></i></div></td>
+    <td>${money(p.normal)}</td><td>${money(p.foil)}</td>
+    <td>${chg==null?'<span class="muted">—</span>':`<span class="${chg>=0?"pos":"neg"}">${chg>=0?"+":""}${chg.toFixed(1)}%</span>`}</td>
+    <td><a class="linkbtn" href="${esc(p.url)}" target="_blank" onclick="event.stopPropagation()">Check ↗</a></td>
+   </tr>`;
+ }).join("") || `<tr><td colspan="11"><div class="empty">No cards match these filters.</div></td></tr>`;
+
+ const lookup=new Map(shown.map(c=>[safeId(nameOf(c)+"|"+collectorOf(c)+"|"+slugOf(c)),c]));
+ $("tbody").querySelectorAll("tr[data-uid]").forEach(tr=>tr.onclick=()=>openDetail(lookup.get(tr.dataset.uid)));
+ $("tbody").querySelectorAll("[data-watch]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleWatch(b.dataset.watch)});
+ $("tbody").querySelectorAll("[data-compare]").forEach(cb=>cb.onchange=e=>{e.stopPropagation();toggleCompare(cb.dataset.compare,cb.checked)});
+}
+function toggleCompare(name,on){
+ if(on&&!compare.includes(name)){
+   if(compare.length>=4){toast("You can compare up to 4 cards.");renderTable();return}
+   compare.push(name);
+ }else if(!on){compare=compare.filter(x=>x!==name)}
+ localStorage.setItem("rb-compare-v1",JSON.stringify(compare));renderCompareTray();renderCompare();
+}
+function renderCompareTray(){
+ $("compareTray").classList.toggle("show",compare.length>0);
+ $("compareItems").innerHTML=compare.map(n=>`<span class="compare-chip">${esc(n)}</span>`).join("");
+}
+function findCardByName(n){return uniqueCards.find(c=>nameOf(c)===n)||allPrints.find(c=>nameOf(c)===n)}
+function renderCompare(){
+ $("compareEmpty").style.display=compare.length?"none":"block";
+ if(!compare.length){$("compareTable").innerHTML="";return}
+ const cs=compare.map(findCardByName).filter(Boolean);
+ const rows=[
+   ["Card",...cs.map(c=>`<b>${esc(nameOf(c))}</b>`)],
+   ["Set",...cs.map(c=>esc(setName(c)))],
+   ["Official usage",...cs.map(c=>usageOf(c)?usageOf(c).pct.toFixed(1)+"%":"—")],
+   ["Official top decks",...cs.map(c=>usageOf(c)?.decks??"—")],
+   ["KLX 2026 decks",...cs.map(c=>klxOf(c)?.decks??"—")],
+   ["Typical / avg copies",...cs.map(c=>usageOf(c)?.avg??klxOf(c)?.typical??"—")],
+   ["Demand score",...cs.map(c=>demandScore(c)+"/100")],
+   ["Normal market",...cs.map(c=>money(cardPrices(c).normal))],
+   ["Foil market",...cs.map(c=>money(cardPrices(c).foil))],
+   ["Saved price Δ",...cs.map(c=>{const x=savedChange(c);return x==null?"—":(x>=0?"+":"")+x.toFixed(1)+"%"})],
+  ];
+ $("compareTable").innerHTML=rows.map((r,i)=>`<tr>${r.map((v,j)=>i===0||j===0?`<th>${v}</th>`:`<td>${v}</td>`).join("")}</tr>`).join("");
+}
+
+function openDetail(c){
+ if(!c)return;
+ const n=nameOf(c),u=usageOf(c),k=klxOf(c),p=cardPrices(c),ev=COMPETITIVE[n],img=cardImage(c),d=demandScore(c),hist=priceHistory(n),chg=savedChange(c);
+ const klxSearch="https://www.google.com/search?q="+encodeURIComponent('site:klxcards.com/card-library/riftbound/ "'+n+'"');
+ const deckSearch="https://www.google.com/search?q="+encodeURIComponent('site:klxcards.com/decks/riftbound/standard/ "'+n+'"');
+ const rbDeckSearch="https://www.google.com/search?q="+encodeURIComponent('site:riftbounddecklists.com "'+n+'"');
+ const rules=canon(c.effect||c.text||c.rules_text||c.oracle_text||"");
+ const evHtml=ev?`
+   <div class="metrics">
+    <div class="metric"><small>KLX all-time decks</small><b>${ev.allDecks}</b></div><div class="metric"><small>Tournaments</small><b>${ev.allTournaments}</b></div>
+    <div class="metric"><small>Best finish</small><b>${ev.best}</b></div><div class="metric"><small>Latest</small><b>${ev.latest}</b></div>
+    <div class="metric"><small>Typical copies</small><b>${ev.typical}</b></div>
+   </div>`:"";
+ const arch=ev?.archetypes?.length?`<div class="block"><h3>Archetypes using this card</h3><div class="chips">${ev.archetypes.map(a=>`<span class="chip">${esc(a[0])} · ${a[1]} decks</span>`).join("")}</div></div>`:
+   `<div class="block"><h3>Archetype spread</h3><div class="callout">A verified per-card archetype breakdown is not embedded for this card yet. Open KLXCards below for the live tournament archive instead of treating missing data as zero.</div></div>`;
+ const placements=ev?.placements?.length?`<div class="block"><h3>Recent / best published placements</h3>${ev.placements.map(x=>`<div class="placement"><b>${esc(x[0])} — ${esc(x[1])} · ${esc(x[2])}</b><small>${esc(x[3])} · ${esc(x[4])} · ${x[5]} copies</small></div>`).join("")}</div>`:
+   `<div class="block"><h3>Placements</h3><div class="callout">Use the tournament search below for live published placements containing this card.</div></div>`;
+ const alongside=ev?.alongside?.length?`<div class="block"><h3>Often seen alongside</h3><div class="chips">${ev.alongside.map(a=>`<span class="chip">${esc(a[0])} · ${a[1]}</span>`).join("")}</div></div>`:"";
+ const histText=hist.length?`${hist.length} local price snapshot${hist.length===1?"":"s"} saved (${hist[0].date} → ${hist.at(-1).date})`:"No local price history yet";
+ $("detail").innerHTML=`
+   <div>${img?`<img class="art" src="${esc(img)}" onerror="this.outerHTML='<div class=&quot;art artph&quot;>Image unavailable</div>'">`:`<div class="art artph">Image unavailable</div>`}</div>
+   <div>
+    <h2>${esc(n)}</h2><div class="detailmeta">${esc(setName(c))} • ${esc(collectorOf(c))} • ${esc(rarityOf(c))} • ${esc(typeOf(c))}${domainsOf(c).length?" • "+esc(domainsOf(c).join(" / ")):""}</div>
+    <div class="metrics">
+      <div class="metric"><small>Demand score</small><b>${d}/100</b></div>
+      <div class="metric"><small>Official usage</small><b>${u?u.pct.toFixed(1)+"%":"—"}</b></div>
+      <div class="metric"><small>KLX 2026 decks</small><b>${k?.decks??"—"}</b></div>
+      <div class="metric"><small>Normal market</small><b>${money(p.normal)}</b></div>
+      <div class="metric"><small>Foil market</small><b>${money(p.foil)}</b></div>
+    </div>
+    ${evHtml}
+    ${rules?`<div class="block"><h3>Card text</h3><div class="callout">${esc(rules)}</div></div>`:""}
+    <div class="detailcols">${arch}${placements}</div>
+    ${alongside}
+    <div class="block" style="margin-top:12px"><h3>Price tracking</h3><div class="callout">${histText}${chg!=null?` · change since previous saved snapshot: <b class="${chg>=0?"pos":"neg"}">${chg>=0?"+":""}${chg.toFixed(1)}%</b>`:""}. Snapshots are stored only in this browser.</div></div>
+    <div class="links">
+      <a class="linkbtn" href="${esc(p.url)}" target="_blank">TCGplayer exact/search page ↗</a>
+      <a class="linkbtn" href="${klxSearch}" target="_blank">KLX card history ↗</a>
+      <a class="linkbtn" href="${deckSearch}" target="_blank">Tournament decks using card ↗</a>
+      <a class="linkbtn" href="${rbDeckSearch}" target="_blank">Riftbound Decklists ↗</a>
+      <button class="btn" id="detailWatch">${isWatched(c)?"★ Watched":"☆ Add to watchlist"}</button>
+      <button class="btn" id="detailCompare">${compare.includes(n)?"Remove comparison":"Compare"}</button>
+    </div>
+   </div>`;
+ $("detailWatch").onclick=()=>{toggleWatch(n);$("detailWatch").textContent=isWatched(c)?"★ Watched":"☆ Add to watchlist"};
+ $("detailCompare").onclick=()=>{toggleCompare(n,!compare.includes(n));$("detailCompare").textContent=compare.includes(n)?"Remove comparison":"Compare"};
+ $("modalBack").classList.add("open");
+}
+$("modalClose").onclick=()=>$("modalBack").classList.remove("open");
+$("modalBack").onclick=e=>{if(e.target===$("modalBack"))$("modalBack").classList.remove("open")};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modalBack").classList.remove("open");if(e.key==="/"&&document.activeElement.tagName!=="INPUT"){e.preventDefault();showView("cards");$("search").focus()}});
+
+function renderOverview(){
+ const ranked=uniqueCards.filter(c=>usageOf(c)||klxOf(c)).sort((a,b)=>demandScore(b)-demandScore(a));
+ const top=ranked.slice(0,10);
+ $("hotGrid").innerHTML=top.slice(0,5).map(c=>{
+  const p=cardPrices(c),u=usageOf(c),img=cardImage(c);
+  return `<div class="hotcard" data-hot="${esc(nameOf(c))}"><div class="mini">${img?`<img src="${esc(img)}" loading="lazy">`:"<div style='width:45px'></div>"}<div><b>${esc(nameOf(c))}</b><small>${u?u.pct.toFixed(1)+"% official usage":"Tournament tracked"}</small><div class="big">${demandScore(c)}</div><small>Demand score · ${money(p.normal)}</small></div></div></div>`;
+ }).join("");
+ document.querySelectorAll("[data-hot]").forEach(x=>x.onclick=()=>openDetail(findCardByName(x.dataset.hot)));
+ $("overviewRanks").innerHTML=top.map((c,i)=>`<div class="rank"><span class="num">${i+1}</span><div><b>${esc(nameOf(c))}</b><small>${usageOf(c)?.pct?.toFixed(1)??"—"}% official · ${klxOf(c)?.decks??"—"} KLX 2026 lists</small></div><span class="kpi">${money(cardPrices(c).normal)}</span></div>`).join("");
+ $("winnerList").innerHTML=winnerHTML();
+ $("winnerListMeta").innerHTML=winnerHTML();
+}
+function winnerHTML(){return WINNERS.map(w=>`<div class="winner"><time>${w[1]}<br>${esc(w[0])}</time><div><b>🏆 ${esc(w[3])}</b><small>${esc(w[2])} · paired with ${esc(w[4])}</small></div></div>`).join("")}
+function renderMeta(){
+ $("archetypeList").innerHTML=ARCHETYPES.map((a,i)=>`<div class="legend-row"><div><b>${i+1}. ${esc(a[0])}</b></div><span class="wr">${a[1].toFixed(1)}%</span><span>${a[2]} matches</span><span>${a[3]} pilots</span></div>`).join("");
+}
+function exportCsv(){
+ const rows=[["Card","Set","Collector","Type","Domains","Rarity","Official Usage %","Official Decks","KLX 2026 Decks","Avg Copies","Demand Score","Normal Market","Foil Market","Saved Change %","TCGplayer"]];
+ for(const c of filtered){
+  const u=usageOf(c),k=klxOf(c),p=cardPrices(c),chg=savedChange(c);
+  rows.push([nameOf(c),setName(c),collectorOf(c),typeOf(c),domainsOf(c).join("/"),rarityOf(c),u?.pct??"",u?.decks??"",k?.decks??"",u?.avg??k?.typical??"",demandScore(c),p.normal??"",p.foil??"",chg==null?"":chg,p.url]);
+ }
+ const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+ const blob=new Blob([csv],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="riftbound-market-pulse.csv";a.click();URL.revokeObjectURL(a.href);
+}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1700)}
+
+async function fetchJSONResilient(url, cacheKey, timeoutMs=15000){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),timeoutMs);
+ try{
+  const r=await fetch(url,{cache:"no-store",signal:controller.signal});
+  if(!r.ok)throw Error(`${url} returned HTTP ${r.status}`);
+  const data=await r.json();
+  try{localStorage.setItem(cacheKey,JSON.stringify({saved:new Date().toISOString(),data}))}catch(e){}
+  return {data,source:"live"};
+ }catch(err){
+  try{
+   const cached=JSON.parse(localStorage.getItem(cacheKey)||"null");
+   if(cached?.data)return {data:cached.data,source:"cache",saved:cached.saved,error:String(err)};
+  }catch(e){}
+  throw err;
+ }finally{clearTimeout(timer)}
+}
+
+async function loadLive(){
+ $("refreshBtn").disabled=true;
+ $("dataStatus").textContent="Connecting to RiftHunt…";
+ $("cardsSubtitle").textContent="Loading the card catalogue and daily price feed…";
+ try{
+  const [cardResult,priceResult]=await Promise.all([
+   fetchJSONResilient("https://api.rifthunt.com/bulk/cards","rb-api-cards-v1"),
+   fetchJSONResilient("https://api.rifthunt.com/bulk/prices","rb-api-prices-v1")
+  ]);
+
+  const cr=cardResult.data, pr=priceResult.data;
+  allPrints=Array.isArray(cr)?cr:(cr.data||cr.cards||[]);
+  prices=Array.isArray(pr)?pr:(pr.data||pr.prices||[]);
+
+  if(!allPrints.length)throw Error("RiftHunt returned an empty card catalogue.");
+
+  uniqueCards=canonicalizeCards(allPrints);
+  buildPriceMaps();
+  populateFilters();
+  snapshotPrices();
+
+  $("statCards").textContent=allPrints.length.toLocaleString();
+  $("statPrices").textContent=prices.length.toLocaleString();
+  $("statRefresh").textContent=new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+
+  const usedCache=cardResult.source==="cache"||priceResult.source==="cache";
+  $("dataStatus").textContent=usedCache?"Loaded saved data; live API refresh unavailable":"Live data loaded";
+  $("cardsSubtitle").textContent=usedCache
+    ?"Catalogue loaded from your last successful visit; prices refresh when RiftHunt is reachable."
+    :"Full live catalogue with competitive and market context.";
+
+  applyFilters();
+  renderOverview();
+  renderMeta();
+  renderCompare();
+  updateWatchCount();
+ }catch(e){
+  console.error(e);
+  $("dataStatus").textContent="Could not load catalogue";
+  $("statRefresh").textContent="Connection error";
+  $("cardsSubtitle").textContent="The live data source could not be reached. Try Refresh or open /health.html to test the API connection.";
+  $("tbody").innerHTML=`<tr><td colspan="11"><div class="empty">
+    <b>Unable to reach the RiftHunt API.</b><br><br>
+    This page stops waiting after 15 seconds instead of loading forever.
+    Once hosted on a normal HTTPS site, RiftHunt's browser API should load directly.
+  </div></td></tr>`;
+  $("resultCount").textContent="API unavailable";
+  toast("RiftHunt API unavailable. The page stopped retrying instead of hanging.");
+  renderMeta();
+  $("winnerList").innerHTML=winnerHTML();
+  $("winnerListMeta").innerHTML=winnerHTML();
+ }
+ $("refreshBtn").disabled=false;
+}
+
+["search","setFilter","typeFilter","rarityFilter","domainFilter","usageFilter","sortFilter"].forEach(id=>$(id).addEventListener("input",()=>applyFilters()));
+$("uniqueMode").onclick=()=>{displayMode="unique";$("uniqueMode").classList.add("active");$("printsMode").classList.remove("active");applyFilters()};
+$("printsMode").onclick=()=>{displayMode="prints";$("printsMode").classList.add("active");$("uniqueMode").classList.remove("active");applyFilters()};
+$("allMode").onclick=()=>{watchOnly=false;$("allMode").classList.add("active");$("watchedMode").classList.remove("active");applyFilters()};
+$("watchedMode").onclick=()=>{watchOnly=true;$("watchedMode").classList.add("active");$("allMode").classList.remove("active");applyFilters()};
+$("prevBtn").onclick=()=>{if(page>1){page--;renderTable();window.scrollTo({top:0,behavior:"smooth"})}};
+$("nextBtn").onclick=()=>{if(page<Math.ceil(filtered.length/pageSize)){page++;renderTable();window.scrollTo({top:0,behavior:"smooth"})}};
+$("refreshBtn").onclick=loadLive;
+$("exportBtn").onclick=exportCsv;
+$("watchBtn").onclick=()=>{showView("cards");watchOnly=true;$("watchedMode").classList.add("active");$("allMode").classList.remove("active");applyFilters()};
+$("clearCompare").onclick=()=>{compare=[];localStorage.setItem("rb-compare-v1","[]");renderCompare();renderCompareTray();renderTable()};
+$("openCompare").onclick=()=>showView("compare");
+
+renderMeta();$("winnerList").innerHTML=winnerHTML();$("winnerListMeta").innerHTML=winnerHTML();updateWatchCount();renderCompareTray();
+loadLive();
+</script>
+
+<footer style="max-width:1560px;margin:0 auto;padding:0 18px 24px;color:#74829f;font-size:9px;line-height:1.5">
+  Riftbound Market Pulse is an unofficial community tracker. Card data and images are provided by RiftHunt's public API;
+  competitive statistics are attributed in-app to their public sources. Riftbound and related game assets belong to their respective owners.
+</footer>
+
+</body>
+</html>

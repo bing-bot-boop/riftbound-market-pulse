@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Riftbound Market Pulse — API Health</title>
+<style>
+body{font-family:system-ui;background:#09101d;color:#eef3ff;max-width:760px;margin:50px auto;padding:20px}
+.card{background:#11182b;border:1px solid #26324d;border-radius:14px;padding:18px;margin:12px 0}
+.ok{color:#64d9a3}.bad{color:#ff7f88}a{color:#9fb4ff}code{background:#0b1426;padding:2px 5px;border-radius:5px}
+</style></head><body>
+<h1>API Connection Test</h1>
+<p>This page checks whether your browser can reach RiftHunt directly.</p>
+<div id="health" class="card">Testing <code>/health</code>…</div>
+<div id="cards" class="card">Testing <code>/bulk/cards</code>…</div>
+<p><a href="/">← Back to Riftbound Market Pulse</a></p>
+<script>
+async function test(url,id,label){
+ const el=document.getElementById(id);
+ const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);
+ try{
+  const r=await fetch(url,{signal:c.signal,cache:"no-store"});
+  if(!r.ok)throw Error("HTTP "+r.status);
+  const j=await r.json();
+  const count=Array.isArray(j)?j.length:(j.data?.length||j.cards?.length||"response received");
+  el.innerHTML=`<b class="ok">✓ ${label} works</b><br>Response: ${count}`;
+ }catch(e){
+  el.innerHTML=`<b class="bad">✕ ${label} failed</b><br>${String(e)}<br><br>If the main site is hosted on HTTPS and this still fails, RiftHunt may be temporarily unavailable or blocked on your network.`;
+ }finally{clearTimeout(t)}
+}
+test("https://api.rifthunt.com/health","health","RiftHunt health endpoint");
+test("https://api.rifthunt.com/bulk/cards","cards","RiftHunt card catalogue");
+</script></body></html>
