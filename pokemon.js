@@ -20,5 +20,6 @@ el('pkMode').onchange=async()=>{mode=el('pkMode').value;page=1;el('pkSet').value
 el('pkPrev').onclick=()=>{page--;render()};el('pkNext').onclick=()=>{page++;render()};el('pkRefresh').onclick=async()=>{await load();if(mode==='catalogue'){catalogue=[];await getCatalogue()}};
 el('pkReset').onclick=()=>{['pkSearch','pkSet','pkMin','pkMax'].forEach(id=>el(id).value='');el('pkWatchOnly').checked=false;page=1;render()};
 el('pkExport').onclick=()=>{const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';const rows=[['Card','ID','Set','Rarity','Market USD','Source updated','TCGplayer'],...matches.map(c=>[c.name,c.id,c.set?.name,c.rarity,price(c),c.pricing?.tcgplayer?.updated,link(c)])];const blob=new Blob([rows.map(r=>r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='pokemon-market-pulse.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+document.addEventListener('pokemon-card-detail',e=>{const c=e.detail;if(!cards.some(x=>x.id===c.id))cards.push(c);detail(c.id)});
 document.querySelector('[data-view="pokemon"]').addEventListener('click',()=>{if(!loaded)load()});
 })();

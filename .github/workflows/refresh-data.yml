@@ -41,6 +41,20 @@ jobs:
           if due:
               subprocess.run(["python", "scripts/refresh_pokemon.py"], check=True)
           PY
+      - name: Refresh Pokémon bulk signals once per day
+        run: |
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          from datetime import datetime, timezone
+          try:
+              checked = datetime.fromisoformat(json.loads(Path("data/pokemon-bulk.json").read_text())["checkedAt"])
+              due = (datetime.now(timezone.utc) - checked).total_seconds() > 86400
+          except (OSError, ValueError, KeyError):
+              due = True
+          if due:
+              subprocess.run(["python", "scripts/refresh_pokemon_bulk.py"], check=True)
+          PY
       - name: Save refreshed public data
         run: |
           git config user.name 'github-actions[bot]'

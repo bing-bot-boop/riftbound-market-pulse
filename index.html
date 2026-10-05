@@ -108,12 +108,27 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
     <button data-view="compare">Compare</button>
     <button data-view="method">Methodology</button>
     <button data-view="pokemon">Pokémon Cards</button>
+    <button data-view="bulk">Pokémon Bulk Demand</button>
   </nav>
 
   <main>
+    <section id="view-bulk" class="view">
+      <div class="panel">
+        <div class="panel-head"><div><h2>Pokémon Bulk Demand</h2><small>Find ordinary cards worth pulling out before selling mixed bulk</small></div><span class="badge hot">Sorting guide</span></div>
+        <div class="body"><div class="callout"><b>Competitive usage is a demand signal.</b> Cards below are ranked by the share of complete published decklists using their name at recent major Standard events. This is a tournament sample, not sales volume or guaranteed buyer demand. Only verified Common, Uncommon and ordinary Rare printings qualify; basic energies and ultra rares are excluded. Usage is grouped by name across printings. Match the exact printing, attacks and abilities before setting cards aside.</div><p id="bulkStatus" class="muted" role="status">Open this category to load bulk signals.</p><div id="bulkEvents" class="source-row"></div><p id="bulkIssues" class="sub"></p></div>
+        <div class="filters" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))"><input id="bulkSearch" placeholder="Search card, set or number…" aria-label="Search bulk cards"><select id="bulkKind" aria-label="Bulk card type"><option value="">All card types</option><option>Trainer</option><option>Pokémon</option><option>Energy</option></select><select id="bulkSort" aria-label="Bulk sorting"><option value="share">Most used in sampled decks</option><option value="copies">Most copies in sample</option><option value="archetypes">Most archetypes</option><option value="name">Name A–Z</option></select></div>
+        <div class="toolbar"><div class="left"><label><input id="bulkWatched" type="checkbox" style="width:auto"> Watchlist only</label><span id="bulkCount" class="badge dim">—</span></div><div class="right"><button id="bulkClear" class="btn">Clear filters</button><button id="bulkRefresh" class="btn">Refresh bulk</button><button id="bulkExport" class="btn">Export results</button></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Watch</th><th>Card to check</th><th>Sample deck share</th><th>Avg. copies</th><th>Archetypes</th><th>Displayed USD</th><th>Evidence</th></tr></thead><tbody id="bulkRows"></tbody></table></div>
+      </div>
+      <div class="panel" style="margin-top:14px"><div class="panel-head"><h2>Bulk categories buyers advertise</h2><small>Snapshot quotes · confirm directly with buyer</small></div><div class="body"><div class="callout">Category rates show an advertised buying outlet, not a ranking of how quickly cards sell. Prices below are buyer quotes, separate from card market prices. Compare condition rules, quantity limits, current acceptance and shipping. A high category quote does not apply to every valuable card in that category.</div><div id="bulkRates" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:14px"></div></div></div>
+      <div class="panel" style="margin-top:14px"><div class="panel-head"><h2>Category quote calculator</h2></div><div class="body"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"><label>Buyer<select id="bulkBuyer"></select></label><label>Category<select id="bulkCategory"></select></label><label>Card quantity<input id="bulkQty" type="number" min="0" step="1" value="1000"></label><label>Your shipping cost (USD)<input id="bulkShipping" type="number" min="0" step="0.01" value="0"></label></div><p id="bulkQuote"></p><p id="bulkTerms" class="sub"></p></div></div>
+      <div class="cards3" style="margin-top:14px"><div class="panel"><div class="body"><h3>Pull playable printings first</h3><p class="callout">Set aside ordinary trainers and evolution Pokémon with evidence of deck usage. Playsets make it easier to offer deck-building lots. Check the exact printing and current rules.</p></div></div><div class="panel"><div class="body"><h3>Sort holo and reverse holo</h3><p class="callout">Buyers quote these separately from non-foil commons. Review individual playable or collectible printings before accepting a flat category rate.</p></div></div><div class="panel"><div class="body"><h3>Keep basic energy separate</h3><p class="callout">Energy acceptance differs by buyer. A quoted energy rate applies only where the buyer accepts that category. Avoid mixing it into common/uncommon counts.</p></div></div></div>
+      <p class="callout">Sources are checked daily. Refresh loads the latest saved snapshot. Tournament lists represent published competitors, not all attendees. Cards with unavailable or unsupported rarity metadata are omitted. The list covers the top verified candidates in the sampled events, not every Pokémon card. Sources: <a href="https://limitlesstcg.com/tournaments" target="_blank" rel="noopener noreferrer">Limitless</a> and <a href="https://tcgdex.dev" target="_blank" rel="noopener noreferrer">TCGdex</a>; buyer links appear above.</p>
+    </section>
+
     <section id="view-pokemon" class="view">
       <div class="panel">
-        <div class="panel-head"><div><h2>Pokémon Market Pulse</h2><small>English singles · collector favourites · full catalogue discovery</small></div><span class="badge mid">Pokémon</span></div>
+        <div class="panel-head"><div><h2>Pokémon Market Pulse</h2><small>English singles · collector favourites · full catalogue discovery</small><p><button class="btn" onclick="showView('bulk');document.querySelector('[data-view=bulk]').click()">Find cards to pull from bulk →</button></p></div><span class="badge mid">Pokémon</span></div>
         <div class="body"><div class="callout">Featured singles are a curated selection of collector cards, not a verified best-selling ranking. Search the English catalogue for other printings. USD prices and images come from TCGdex; open a card for finish-specific prices and marketplace links.</div><p id="pkStatus" class="muted" role="status">Open this category to load Pokémon cards.</p></div>
         <div class="filters" style="grid-template-columns:repeat(auto-fit,minmax(145px,1fr))">
           <input id="pkSearch" aria-label="Search Pokémon name or card number" placeholder="Name, set or card number…">
@@ -680,6 +695,7 @@ setInterval(()=>{if(!document.hidden)loadLive()},15*60*1000);
 </script>
 
 <script src="pokemon.js"></script>
+<script src="pokemon-bulk.js"></script>
 <footer style="max-width:1560px;margin:0 auto;padding:0 18px 24px;color:#74829f;font-size:9px;line-height:1.5">
   Riftbound Market Pulse is an unofficial community tracker. Card data and images are provided by RiftHunt's public API; scheduled tournament checks use Riftbound Zone and KLXCards;
   competitive statistics are attributed in-app to their public sources. Riftbound and related game assets belong to their respective owners.
