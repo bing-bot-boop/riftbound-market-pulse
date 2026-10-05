@@ -27,6 +27,20 @@ jobs:
       - run: pip install beautifulsoup4==4.15.0
       - name: Collect and validate source data
         run: python scripts/refresh_sources.py
+      - name: Refresh Pokémon snapshots once per day
+        run: |
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          from datetime import datetime, timezone
+          try:
+              checked = datetime.fromisoformat(json.loads(Path("data/pokemon.json").read_text())["checkedAt"])
+              due = not Path("data/pokemon-catalogue.json").exists() or (datetime.now(timezone.utc) - checked).total_seconds() > 86400
+          except (OSError, ValueError, KeyError):
+              due = True
+          if due:
+              subprocess.run(["python", "scripts/refresh_pokemon.py"], check=True)
+          PY
       - name: Save refreshed public data
         run: |
           git config user.name 'github-actions[bot]'

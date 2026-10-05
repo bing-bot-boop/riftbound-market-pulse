@@ -107,9 +107,30 @@ input,select{width:100%;background:#0b1426;color:var(--text);border:1px solid va
     <button data-view="meta">Meta & Top Decks</button>
     <button data-view="compare">Compare</button>
     <button data-view="method">Methodology</button>
+    <button data-view="pokemon">Pokémon Cards</button>
   </nav>
 
   <main>
+    <section id="view-pokemon" class="view">
+      <div class="panel">
+        <div class="panel-head"><div><h2>Pokémon Market Pulse</h2><small>English singles · collector favourites · full catalogue discovery</small></div><span class="badge mid">Pokémon</span></div>
+        <div class="body"><div class="callout">Featured singles are a curated selection of collector cards, not a verified best-selling ranking. Search the English catalogue for other printings. USD prices and images come from TCGdex; open a card for finish-specific prices and marketplace links.</div><p id="pkStatus" class="muted" role="status">Open this category to load Pokémon cards.</p></div>
+        <div class="filters" style="grid-template-columns:repeat(auto-fit,minmax(145px,1fr))">
+          <input id="pkSearch" aria-label="Search Pokémon name or card number" placeholder="Name, set or card number…">
+          <select id="pkMode" aria-label="Catalogue scope"><option value="featured">Featured singles</option><option value="catalogue">English catalogue</option></select>
+          <select id="pkSet" aria-label="Pokémon set"><option value="">All sets</option></select>
+          <select id="pkSort" aria-label="Pokémon sort"><option value="high">Market: high to low</option><option value="low">Market: low to high</option><option value="name">Name A–Z</option><option value="set">Set A–Z</option></select>
+          <input id="pkMin" type="number" min="0" step="0.01" aria-label="Minimum USD price" placeholder="Min USD">
+          <input id="pkMax" type="number" min="0" step="0.01" aria-label="Maximum USD price" placeholder="Max USD">
+        </div>
+        <div class="toolbar"><div class="left"><label><input id="pkWatchOnly" type="checkbox" style="width:auto"> Watchlist only</label><span id="pkCount" class="badge dim">—</span></div><div class="right"><button id="pkReset" class="btn">Clear filters</button><button id="pkRefresh" class="btn">Refresh Pokémon</button><button id="pkExport" class="btn">Export results</button></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Watch</th><th>Card</th><th>Set</th><th>Rarity</th><th>Market USD</th><th>Price updated</th><th>Marketplace</th></tr></thead><tbody id="pkRows"></tbody></table></div>
+        <div class="pager"><button id="pkPrev" class="btn">Previous</button><span id="pkPage">Page 1</span><button id="pkNext" class="btn">Next</button></div>
+      </div>
+      <section id="pkDetail" class="panel" hidden style="margin-top:14px" aria-live="polite"></section>
+      <p class="callout">Featured snapshots are checked daily by the scheduled collector. Refresh loads the latest published snapshot. Catalogue entries load prices when opened; price filters use only loaded prices. Pokémon data: <a href="https://tcgdex.dev/en/markets-prices" target="_blank" rel="noopener noreferrer">TCGdex</a>. Pokémon and card artwork belong to their respective owners.</p>
+    </section>
+
     <section id="view-overview" class="view active">
       <div class="stats">
         <div class="stat"><span>Card printings</span><strong id="statCards">—</strong><small>Live catalogue</small></div>
@@ -658,6 +679,7 @@ loadLive();
 setInterval(()=>{if(!document.hidden)loadLive()},15*60*1000);
 </script>
 
+<script src="pokemon.js"></script>
 <footer style="max-width:1560px;margin:0 auto;padding:0 18px 24px;color:#74829f;font-size:9px;line-height:1.5">
   Riftbound Market Pulse is an unofficial community tracker. Card data and images are provided by RiftHunt's public API; scheduled tournament checks use Riftbound Zone and KLXCards;
   competitive statistics are attributed in-app to their public sources. Riftbound and related game assets belong to their respective owners.
